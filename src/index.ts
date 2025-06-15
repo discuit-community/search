@@ -73,6 +73,15 @@ const app = new Elysia()
     });
 
     return res;
+  })
+  .get("/autocomplete", async ({ query }) => {
+    const q = (query.q as string) ?? "";
+    const res = await postsIndex.search(q, {
+      limit: 10,
+      attributesToRetrieve: ["title", "communityName"],
+    });
+    console.log(res);
+    return res.hits.map((hit) => hit.title);
   });
 
 async function main() {
