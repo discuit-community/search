@@ -67,6 +67,9 @@ const app = new Elysia()
       limit,
       offset,
       facets: ["communityName", "username", "type"],
+      attributesToHighlight: ["title", "content"],
+      highlightPreTag: "<span class='highlight'>",
+      highlightPostTag: "</span>",
     });
 
     return res;
