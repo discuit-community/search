@@ -1,0 +1,108 @@
+import { Database } from "bun:sqlite";
+import { DiscuitClient, type PostModel } from "@discuit-community/client";
+
+const client = new DiscuitClient();
+const db = new Database("posts.db");
+
+db.run(`
+  create table if not exists posts (
+    publicId text primary key,
+    createdAt text not null,
+
+    title text not null,
+    body text,
+    communityName text not null,
+    username text not null,
+    type text,
+
+    hotness real,
+    upvotes integer,
+    downvotes integer,
+
+    isPinned boolean,
+    deleted boolean
+  )
+
+`);
+
+function savePosts(posts: PostModel[]) {
+  const stmt = db.prepare(
+    "insert or ignore into posts (publicId, title, body, createdAt, communityName, username, type, hotness, upvotes, downvotes, isPinned, deleted) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+  );
+  const inserted: string[] = [];
+  db.transaction(() => {
+    for (const p of posts) {
+      const res = stmt.run(
+        p.raw.publicId,
+        p.raw.title,
+        p.raw.body,
+        p.raw.createdAt,
+        p.raw.communityName,
+        p.raw.username,
+        p.raw.type,
+        p.raw.hotness,
+        p.raw.upvotes,
+        p.raw.downvotes,
+        p.raw.isPinned,
+        p.raw.deleted,
+      );
+      if (res.changes === 1) inserted.push(p.raw.publicId);
+    }
+  })();
+  console.log(
+    `  inserted ${inserted.length} posts: ${inserted.slice(0, 10).join(", ")}`,
+  );
+}
+
+async function fetchAllPosts() {
+  const posts: PostModel[] = [];
+  const startKey: string | undefined = "1769555499bbc51b0f7f1417";
+  let next: string | undefined = startKey;
+  let total = 0;
+  let batch = 0;
+  const MAX_POSTS = 50000;
+
+  const before = (
+    db.prepare("select count(*) as count from posts").get() as { count: number }
+  ).count;
+
+  while (total < MAX_POSTS) {
+    batch++;
+    console.log(
+      `fetching batch ${batch}... (total: ${total}; next: ${next ?? "none"})`,
+    );
+    const url = new URL("https://discuit.org/api/posts");
+    url.searchParams.set("feed", "all");
+    url.searchParams.set("sort", "hot");
+    url.searchParams.set("limit", "50");
+
+    if (next) url.searchParams.set("next", next);
+    const [getPostsData, getPostsErr] = await client.getPosts({
+      feed: "all",
+      limit: 50,
+      sort: "latest",
+      next: next ?? undefined,
+    });
+
+    if (getPostsErr) {
+      console.error("error fetching posts:", getPostsErr);
+      break;
+    }
+
+    total += getPostsData.posts.length;
+    next = getPostsData.next;
+    posts.push(...getPostsData.posts);
+
+    savePosts(getPostsData.posts);
+    if (!getPostsData.posts.length) break;
+  }
+
+  savePosts(posts);
+
+  const after = (
+    db.prepare("select count(*) as count from posts").get() as { count: number }
+  ).count;
+  console.log(`added ${after - before} new posts, total: ${after}`);
+}
+
+fetchAllPosts();
