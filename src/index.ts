@@ -27,6 +27,7 @@ const searchClient = new Meilisearch({
 const postsIndex = searchClient.index("posts");
 postsIndex.updateSettings({
   filterableAttributes: ["communityName", "username", "type"],
+  sortableAttributes: ["createdAt"],
   faceting: {
     maxValuesPerFacet: 100,
     sortFacetValuesBy: { communityName: "count" },
@@ -41,6 +42,7 @@ const app = new Elysia()
     const q = (query.q as string) ?? "";
     const community = (query.community as string) ?? "";
     const username = (query.username as string) ?? "";
+    const sort = (query.sort as string) ?? "";
     const type = (query.type as string) ?? "";
     const limit = Math.min(Number(query.limit) || 20, 100);
     const offset = Number(query.offset) || 0;
@@ -66,6 +68,7 @@ const app = new Elysia()
       filter: filter.length ? filter.join(" AND ") : undefined,
       limit,
       offset,
+      sort: sort ? [sort] : undefined,
       facets: ["communityName", "username", "type"],
       attributesToHighlight: ["title", "content"],
       highlightPreTag: "<span class='highlight'>",
