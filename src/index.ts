@@ -4,6 +4,7 @@ import { Database } from "bun:sqlite";
 import { Meilisearch } from "meilisearch";
 import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
+import { swagger } from "@elysiajs/swagger";
 
 const db = new Database("posts.db");
 
@@ -35,8 +36,36 @@ postsIndex.updateSettings({
   facetSearch: true,
 });
 
+class SearchFailed extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "SearchFailed";
+  }
+}
+
 const app = new Elysia()
   .use(cors())
+  .use(swagger())
+
+  .error({
+    SearchFailed,
+  })
+  .onError(({ set, code, error }) => {
+    switch (code) {
+      case "SearchFailed":
+        set.status = 500;
+        console.error("search failed:", error);
+        return { error: "search failed", code: 500 };
+      case "NOT_FOUND":
+        set.status = 404;
+        return { error: "not found", code: 404 };
+      default:
+        set.status = 500;
+        console.error("internal server error:", error);
+        return { error: "internal server error", code: 500 };
+    }
+  })
+
   .get("/health", () => ({ status: "ok" }))
   .get("/search", async ({ query, set }) => {
     const q = (query.q as string) ?? "";
@@ -64,27 +93,41 @@ const app = new Elysia()
     });
     if (filter.length) params.set("filter", filter.join(" AND "));
 
-    const res = await postsIndex.search(q, {
-      filter: filter.length ? filter.join(" AND ") : undefined,
-      limit,
-      offset,
-      sort: sort ? [sort] : undefined,
-      facets: ["communityName", "username", "type"],
-      attributesToHighlight: ["title", "content"],
-      highlightPreTag: "<span class='highlight'>",
-      highlightPostTag: "</span>",
-    });
+    try {
+      const res = await postsIndex.search(q, {
+        filter: filter.length ? filter.join(" AND ") : undefined,
+        limit,
+        offset,
+        sort: sort ? [sort] : undefined,
+        facets: ["communityName", "username", "type"],
+        attributesToHighlight: ["title", "content"],
+        highlightPreTag: "<span class='highlight'>",
+        highlightPostTag: "</span>",
+      });
 
-    return res;
+      return res;
+    } catch (error) {
+      throw new SearchFailed(
+        error instanceof Error ? error.message : "search failed",
+      );
+    }
   })
   .get("/autocomplete", async ({ query }) => {
     const q = (query.q as string) ?? "";
-    const res = await postsIndex.search(q, {
-      limit: 10,
-      attributesToRetrieve: ["title", "communityName"],
-    });
-    console.log(res);
-    return res.hits.map((hit) => hit.title);
+    try {
+      const res = await postsIndex.search(q, {
+        limit: 10,
+        attributesToRetrieve: ["title", "communityName"],
+      });
+      return res.hits.map((hit) => ({
+        title: hit.title,
+        communityName: hit.communityName,
+      }));
+    } catch (error) {
+      throw new SearchFailed(
+        error instanceof Error ? error.message : "search failed",
+      );
+    }
   });
 
 async function main() {
@@ -100,7 +143,7 @@ async function main() {
 
   console.log(`indexed ${posts.length} posts successfully.`);
 
-  app.listen(3000);
+  app.listen(3001);
   console.log(
     `search is running at ${app.server?.hostname}:${app.server?.port}`,
   );
