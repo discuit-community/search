@@ -2,6 +2,14 @@ import type { Post } from "@discuit-community/types";
 import { db } from "./db";
 import { postsIndex, searchClient } from "./meilisearch";
 
+function formatSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} bytes`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} kb`;
+  if (bytes < 1024 * 1024 * 1024)
+    return `${(bytes / (1024 * 1024)).toFixed(2)} mb`;
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} gb`;
+}
+
 function postsAreEqual(a: Post, b: Post): boolean {
   return (
     a.title === b.title &&
@@ -40,6 +48,7 @@ export async function syncIndexWithDatabase() {
 
   let msPosts: Post[] = [];
   let offset = 0;
+  let size = 0;
   const limit = 1000;
   const msStart = Date.now();
   while (true) {
@@ -62,12 +71,18 @@ export async function syncIndexWithDatabase() {
         "deleted",
       ],
     });
+
+    const batchSize = new TextEncoder().encode(
+      JSON.stringify(res.results),
+    ).length;
+    size += batchSize;
     msPosts = msPosts.concat(res.results);
+
     if (res.results.length < limit) break;
     offset += limit;
     process.stdout.clearLine(0);
     process.stdout.write(
-      `\r  fetched ${msPosts.length} posts from index so far...`,
+      `\r  fetched ${msPosts.length} posts from index so far (~${formatSize(batchSize)})...`,
     );
   }
   process.stdout.clearLine(0);
@@ -75,7 +90,7 @@ export async function syncIndexWithDatabase() {
   const msEnd = Date.now();
   const msDuration = Math.round(msEnd - msStart);
   process.stdout.write(
-    `\r  found ${msPosts.length} posts in index in ${msDuration}ms.\n`,
+    `\r  found ${msPosts.length} posts in index in ${msDuration}ms (approx. ${formatSize(size)})\n`,
   );
 
   const msPostsById = new Map(msPosts.map((post) => [post.id, post]));
