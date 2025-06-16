@@ -1,40 +1,17 @@
-import type { Post } from "@discuit-community/types";
 import { Database } from "bun:sqlite";
-
 import { Meilisearch, type RecordAny, SearchResponse } from "meilisearch";
+import type { Post } from "@discuit-community/types";
 import { Elysia, t } from "elysia";
 import { cors } from "@elysiajs/cors";
 import { swagger } from "@elysiajs/swagger";
 
-const db = new Database("posts.db");
+import ENV from "./env";
+import { syncIndexWithDatabase } from "./sync";
+import { postsIndex, searchClient } from "./meilisearch";
 
-const ENV = {
-  SEARCH: {
-    PORT: process.env.SEARCH_PORT || 7700,
-    ADDRESS: process.env.SEARCH_ADDR || "http://127.0.0.1",
-    KEY: process.env.SEARCH_KEY || "dev",
-  },
-  SERVER: {
-    PORT: process.env.SERVER_PORT || 3001,
-  },
+const ARGS = {
+  SKIP_SYNC: process.argv.includes("--skip-sync"),
 };
-const SEARCH_URL = `${ENV.SEARCH.ADDRESS}:${ENV.SEARCH.PORT}`;
-
-const searchClient = new Meilisearch({
-  host: SEARCH_URL,
-  apiKey: ENV.SEARCH.KEY,
-});
-
-const postsIndex = searchClient.index("posts");
-postsIndex.updateSettings({
-  filterableAttributes: ["communityName", "username", "type"],
-  sortableAttributes: ["createdAt"],
-  faceting: {
-    maxValuesPerFacet: 100,
-    sortFacetValuesBy: { communityName: "count" },
-  },
-  facetSearch: true,
-});
 
 class SearchFailed extends Error {
   constructor(message: string) {
@@ -248,17 +225,11 @@ const app = new Elysia()
   );
 
 async function main() {
-  const posts = db.query("select * from posts").all() as Post[];
-  const response = await postsIndex.addDocuments(posts);
-  const uid = response.taskUid;
-
-  const task = await searchClient.tasks.getTask(uid);
-  if (task.status === "failed") {
-    console.error("failed to index documents:", task.error);
-    return;
-  }
-
-  console.log(`indexed ${posts.length} posts successfully.`);
+  if (ENV.SEARCH.SKIP_SYNC || ARGS.SKIP_SYNC)
+    console.log(
+      `skipping index sync due to ${ENV.SEARCH.SKIP_SYNC ? "env" : "args"} setting.`,
+    );
+  else await syncIndexWithDatabase();
 
   app.listen(ENV.SERVER.PORT);
   console.log(
