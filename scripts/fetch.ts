@@ -1,7 +1,10 @@
 import { Database } from "bun:sqlite";
 import { DiscuitClient, type PostModel } from "@discuit-community/client";
+import ENV from "../src/env";
 
-const client = new DiscuitClient();
+const client = new DiscuitClient({
+  apiUrl: ENV.DISCUIT.API_URL,
+});
 const db = new Database("posts.db");
 
 db.run(`
