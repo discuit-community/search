@@ -118,10 +118,13 @@ const app = new Elysia()
         return { error: "invalid limit" };
       }
 
+      const escapeString = (str: string) => str.replace(/"/g, '\\"');
       const filter = [];
-      if (community) filter.push(`communityName = "${community}"`);
-      if (username) filter.push(`username = "${username}"`);
-      if (type) filter.push(`type = "${type}"`);
+
+      if (community)
+        filter.push(`communityName = "${escapeString(community)}"`);
+      if (username) filter.push(`username = "${escapeString(username)}"`);
+      if (type) filter.push(`type = "${escapeString(type)}"`);
 
       const params = new URLSearchParams({
         q,
