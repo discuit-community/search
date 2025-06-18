@@ -21,9 +21,20 @@ body {
   background: hsla(var(--crust) / 1);
 }
 
+main {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  grid-template-columns: 1fr;
+  grid-template-areas:
+    "header"
+    "results"
+    "pagination";
+  height: 100dvh;
+}
+
 header {
+  grid-area: header;
   margin: 1rem auto;
-  max-width: 568px;
 
   .header-input {
     display: flex;
@@ -96,11 +107,18 @@ header {
 }
 
 .results-view {
+  grid-area: results;
   width: 100%;
-  height: 100dvh;
+
   display: flex;
   justify-content: center;
-  padding: 2rem 0;
+  min-height: 0;
+  overflow-y: auto;
+  transition: 0.2s cubic-bezier(0.2, 0, 0, 1);
+
+  &.loading {
+    filter: blur(0.2rem) grayscale(0.5) brightness(0.8);
+  }
 }
 
 .results-container {
@@ -246,6 +264,79 @@ header {
         background: hsla(var(--surface0) / 0.4);
         border-color: hsla(var(--subtext0) / 0.1);
       } */
+    }
+  }
+}
+
+.pagination {
+  grid-area: pagination;
+  margin: 0 auto;
+  padding: 0.5rem;
+  bottom: 0.5rem;
+  z-index: 1000;
+
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  transition: 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.header,
+.pagination {
+  max-width: 568px;
+  width: 100%;
+}
+
+.pagination button {
+  padding: 0.2rem 0.8rem;
+  border-radius: 2rem;
+  border: 1px solid hsla(var(--subtext0) / 0.1);
+  background: hsla(var(--mantle) / 1);
+  color: hsl(var(--subtext1));
+  font-size: 1rem;
+  cursor: pointer;
+  transition: 0.2s cubic-bezier(0.2, 0, 0, 1);
+
+  &:hover {
+    background: hsla(var(--surface0) / 0.9);
+    border-color: hsla(var(--blue) / 0.2);
+  }
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination span {
+  white-space: nowrap;
+  font-size: 0.98em;
+}
+
+.footer {
+  max-width: 568px;
+  width: 100%;
+  background: hsla(var(--mantle) / 1);
+  border: 1px solid hsla(var(--subtext0) / 0.1);
+  border-radius: 3rem 3rem 0 0;
+  min-height: 5rem;
+  padding: 0.5rem;
+  margin: 5rem auto 0 auto;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: hsl(var(--subtext1));
+  gap: 0.5rem;
+
+  a {
+    color: hsl(var(--blue));
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s cubic-bezier(0.2, 0, 0, 1);
+
+    &:hover {
+      color: hsl(var(--blue) / 0.8);
     }
   }
 }

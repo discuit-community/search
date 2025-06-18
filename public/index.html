@@ -4,106 +4,141 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1.0" />
     <title>discuit search</title>
-    <link rel="stylesheet" href="/public/css/catppuccin.css" />
-    <link rel="stylesheet" href="/public/css/index.css" />
+    <link rel="stylesheet" href="./css/catppuccin.css" />
+    <link rel="stylesheet" href="./css/index.css" />
     <script
       defer
       src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
     ></script>
   </head>
   <body :class="'theme-mocha'">
-    <header class="header">
-      <div class="header-input">
-        <input
-          type="text"
-          placeholder="search..."
-          x-model="$store.search.query"
-          @input.debounce.500ms="search"
-          class="search-input"
-        />
-      </div>
-      <!-- <div class="header-row">
-        <div class="filters"></div>
-        <button class="filter-button">meow</button>
-      </div> -->
-    </header>
+    <div class="app">
+      <main>
+        <header class="header">
+          <div class="header-input">
+            <input
+              type="text"
+              placeholder="search..."
+              x-model="$store.search.query"
+              @input.debounce.500ms="$store.search.page = 1; search()"
+              class="search-input"
+            />
+            <!-- <div class="header-row">
+              <div class="filters"></div>
+              <button class="filter-button">meow</button>
+            </div> -->
+          </div>
+        </header>
 
-    <div class="results-view">
-      <div class="results-container">
-        <template x-if="$store.search.results.length > 0">
-          <ul class="results-list">
-            <template
-              x-for="result in $store.search.results"
-              :key="result.publicId"
-            >
-              <li class="result-item">
-                <div class="result-text">
-                  <div class="result-meta">
-                    <a
-                      class="result-username"
-                      x-bind:href="`https://discuit.org/@${result.username}`"
-                    >
-                      @<span x-text="result.username"></span>
-                    </a>
-                    <span>in</span>
-                    <span class="result-community">
-                      d/<a
-                        x-bind:href="`https://discuit.org/${result.communityName}`"
-                        x-text="result.communityName"
-                      ></a>
-                    </span>
-                    <span class="result-date">
-                      •
-                      <time
-                        x-text="new Date(result.createdAt).toLocaleDateString(navigator.language, {
+        <div
+          class="results-view"
+          x-bind:class="{ 'loading': $store.search.fetchingResults }"
+        >
+          <div class="results-container">
+            <template x-if="$store.search.results.length > 0">
+              <ul class="results-list">
+                <template
+                  x-for="result in $store.search.results"
+                  :key="result.publicId"
+                >
+                  <li class="result-item">
+                    <div class="result-text">
+                      <div class="result-meta">
+                        <a
+                          class="result-username"
+                          x-bind:href="`https://discuit.org/@${result.username}`"
+                        >
+                          @<span x-text="result.username"></span>
+                        </a>
+                        <span>in</span>
+                        <span class="result-community">
+                          d/<a
+                            x-bind:href="`https://discuit.org/${result.communityName}`"
+                            x-text="result.communityName"
+                          ></a>
+                        </span>
+                        <span class="result-date">
+                          •
+                          <time
+                            x-text="new Date(result.createdAt).toLocaleDateString(navigator.language, {
                         year: 'numeric',
                         month: '2-digit',
                         day: '2-digit',
                         hour: '2-digit',
                         minute: '2-digit',
                       })"
-                      ></time>
-                    </span>
-                  </div>
-                  <div class="result-info">
-                    <h2
-                      class="result-title"
-                      x-html="result._formatted.title"
-                    ></h2>
-                    <template x-if="result._formatted !== ''">
-                      <p
-                        class="result-body"
-                        x-html="result._formatted.body || ''"
-                      ></p>
-                    </template>
-                  </div>
-                </div>
-                <div class="result-actions">
-                  <a
-                    x-bind:href="`https://discuit.org/${result.communityName}/post/${result.publicId}`"
-                    class="result-link"
-                  >
-                    view on discuit
-                  </a>
-                </div>
-              </li>
+                          ></time>
+                        </span>
+                      </div>
+                      <div class="result-info">
+                        <h2
+                          class="result-title"
+                          x-html="result._formatted.title"
+                        ></h2>
+                        <template x-if="result._formatted !== ''">
+                          <p
+                            class="result-body"
+                            x-html="result._formatted.body || ''"
+                          ></p>
+                        </template>
+                      </div>
+                    </div>
+                    <div class="result-actions">
+                      <a
+                        x-bind:href="`https://discuit.org/${result.communityName}/post/${result.publicId}`"
+                        class="result-link"
+                      >
+                        view on discuit
+                      </a>
+                    </div>
+                  </li>
+                </template>
+              </ul>
             </template>
-          </ul>
-        </template>
-        <template x-if="$store.search.fetchingResults">
-          <p class="loading">loading...</p>
-        </template>
-        <template
-          x-if="$store.search.results.length === 0 && query.trim() !== ''"
-        >
-          <p class="no-results">
-            no results found for "<span x-text="query"></span>"
-          </p>
-        </template>
-        <template x-if="$store.search.query.trim() === ''">
-          <p class="no-query">please enter a search term.</p>
-        </template>
-      </div>
+            <template x-if="$store.search.fetchingResults">
+              <p class="loading">loading...</p>
+            </template>
+            <template
+              x-if="$store.search.results.length === 0 && query.trim() !== ''"
+            >
+              <p class="no-results">
+                no results found for "<span x-text="query"></span>"
+              </p>
+            </template>
+            <template x-if="$store.search.query.trim() === ''">
+              <p class="no-query">please enter a search term.</p>
+            </template>
+          </div>
+        </div>
+
+        <div class="pagination" x-data>
+          <button
+            :disabled="$store.search.page === 1"
+            @click="$store.search.page--; search()"
+          >
+            previous
+          </button>
+          <span>
+            page <span x-text="$store.search.page"></span>
+            of
+            <span
+              x-text="Math.max(1, Math.ceil($store.search.totalHits / $store.search.limit))"
+            ></span>
+          </span>
+          <button
+            :disabled="$store.search.page >= Math.ceil($store.search.totalHits / $store.search.limit)"
+            @click="$store.search.page++; search()"
+          >
+            next
+          </button>
+        </div>
+      </main>
+
+      <footer class="footer">
+        <a href="https://github.com/discuit-community/search">open source!</a>
+        <span>•</span>
+        <a href="https://wlo.moe/">made with ❤ by willow</a>
+      </footer>
     </div>
 
     <script>
@@ -117,9 +152,10 @@
               query: "",
               results: [],
               fetchingResults: false,
-              init() {
-                console.log("Search store initialized");
-              },
+              page: 1,
+              limit: 20,
+              totalHits: 0,
+              init() {},
             });
           },
 
@@ -127,20 +163,30 @@
             const searchStore = Alpine.store("search");
             const query = searchStore.query;
             if (query.trim() === "") {
+              searchStore.results = [];
+              searchStore.totalHits = 0;
               return;
             }
 
-            fetch(`/search?q=${encodeURIComponent(query)}`)
+            searchStore.fetchingResults = true;
+
+            const offset = (searchStore.page - 1) * searchStore.limit;
+
+            fetch(
+              `/search?q=${encodeURIComponent(query)}&limit=${searchStore.limit}&offset=${offset}`,
+            )
               .then((response) => response.json())
               .then(async (data) => {
                 await new Promise((resolve) => setTimeout(resolve, 500));
                 searchStore.results = data.hits || [];
+                searchStore.totalHits = data.estimatedTotalHits || 0;
                 searchStore.fetchingResults = false;
               })
               .catch((error) => {
                 console.error("error fetching search results:", error);
                 searchStore.fetchingResults = false;
                 searchStore.results = [];
+                searchStore.totalHits = 0;
               });
           },
         };
@@ -733,7 +779,7 @@
           const items = container.querySelectorAll(".result-item");
           const containerRect = container.getBoundingClientRect();
 
-          const maxDistance = 200;
+          const maxDistance = 128;
           const minRadius = 0.5;
           const maxRadius = 2.7;
 

@@ -45,7 +45,7 @@ const app = new Elysia()
       },
     }),
   )
-  .use(staticPlugin({ indexHTML: true }))
+  .use(staticPlugin({ prefix: "/" }))
 
   .error({
     SearchFailed,
