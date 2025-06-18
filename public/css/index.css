@@ -128,7 +128,9 @@ header {
       flex-direction: column;
       border: 1px solid hsla(var(--subtext0) / 0.025);
       background: hsla(var(--surface0) / 0.1);
-      border-radius: calc(3rem - 0.3rem);
+      border-radius: var(--item-top-radius, 0.5rem)
+        var(--item-top-radius, 0.5rem) var(--item-bottom-radius, 0.5rem)
+        var(--item-bottom-radius, 0.5rem);
       overflow: hidden;
       margin-bottom: 0.3rem;
       transition: 0.2s cubic-bezier(0.2, 0, 0, 1);

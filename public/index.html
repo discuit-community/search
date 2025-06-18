@@ -724,6 +724,57 @@
           },
         ];
       });
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const container = document.querySelector(".results-list");
+        if (!container) return;
+
+        function updateItemRadii() {
+          const items = container.querySelectorAll(".result-item");
+          const containerRect = container.getBoundingClientRect();
+
+          const maxDistance = 200;
+          const minRadius = 0.5;
+          const maxRadius = 2.7;
+
+          items.forEach((item) => {
+            const itemRect = item.getBoundingClientRect();
+
+            const distanceTop = itemRect.top - containerRect.top;
+            const distanceBottom = containerRect.bottom - itemRect.bottom;
+
+            let topRadius = minRadius;
+            if (distanceTop >= 0 && distanceTop <= maxDistance) {
+              topRadius =
+                maxRadius -
+                (maxRadius - minRadius) * (distanceTop / maxDistance);
+            }
+
+            let bottomRadius = minRadius;
+            if (distanceBottom >= 0 && distanceBottom <= maxDistance) {
+              bottomRadius =
+                maxRadius -
+                (maxRadius - minRadius) * (distanceBottom / maxDistance);
+            }
+
+            item.style.setProperty("--item-top-radius", `${topRadius}rem`);
+            item.style.setProperty(
+              "--item-bottom-radius",
+              `${bottomRadius}rem`,
+            );
+          });
+        }
+
+        container.addEventListener("scroll", updateItemRadii);
+        window.addEventListener("resize", updateItemRadii);
+
+        const observer = new MutationObserver(() =>
+          setTimeout(updateItemRadii, 10),
+        );
+        observer.observe(container, { childList: true, subtree: true });
+
+        setTimeout(updateItemRadii, 50);
+      });
     </script>
   </body>
 </html>
