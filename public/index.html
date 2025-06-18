@@ -13,14 +13,19 @@
   </head>
   <body :class="'theme-mocha'">
     <header class="header">
-      <input
-        type="text"
-        placeholder="search..."
-        x-model="$store.search.query"
-        @input.debounce.500ms="search"
-        class="search-input"
-      />
-      <button @click="search" class="search-button">search</button>
+      <div class="header-input">
+        <input
+          type="text"
+          placeholder="search..."
+          x-model="$store.search.query"
+          @input.debounce.500ms="search"
+          class="search-input"
+        />
+      </div>
+      <!-- <div class="header-row">
+        <div class="filters"></div>
+        <button class="filter-button">meow</button>
+      </div> -->
     </header>
 
     <div class="results-view">
