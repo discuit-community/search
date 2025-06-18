@@ -266,6 +266,27 @@ header {
       } */
     }
   }
+
+  .loading,
+  .no-results,
+  .no-query {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+    color: hsl(var(--subtext1));
+    font-size: 1.2em;
+    padding: 1rem;
+    text-align: center;
+
+    &.loading {
+      color: hsl(var(--blue));
+      font-weight: bold;
+      font-size: 1.5em;
+      animation: pulse 1.5s infinite;
+    }
+  }
 }
 
 .pagination {

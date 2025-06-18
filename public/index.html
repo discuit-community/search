@@ -207,54 +207,72 @@
       });
 
       document.addEventListener("DOMContentLoaded", () => {
-        const container = document.querySelector(".results-list");
-        if (!container) return;
+        const parent = document.querySelector(".results-container");
+        if (!parent) return;
 
-        function updateItemRadii() {
-          const items = container.querySelectorAll(".result-item");
-          const containerRect = container.getBoundingClientRect();
+        function setupResultsList(container) {
+          function updateItemRadii() {
+            const items = container.querySelectorAll(".result-item");
+            const containerRect = container.getBoundingClientRect();
 
-          const maxDistance = 128;
-          const minRadius = 0.5;
-          const maxRadius = 2.7;
+            const maxDistance = 128;
+            const minRadius = 0.5;
+            const maxRadius = 2.7;
 
-          items.forEach((item) => {
-            const itemRect = item.getBoundingClientRect();
+            items.forEach((item) => {
+              const itemRect = item.getBoundingClientRect();
 
-            const distanceTop = itemRect.top - containerRect.top;
-            const distanceBottom = containerRect.bottom - itemRect.bottom;
+              const distanceTop = itemRect.top - containerRect.top;
+              const distanceBottom = containerRect.bottom - itemRect.bottom;
 
-            let topRadius = minRadius;
-            if (distanceTop >= 0 && distanceTop <= maxDistance) {
-              topRadius =
-                maxRadius -
-                (maxRadius - minRadius) * (distanceTop / maxDistance);
-            }
+              let topRadius = minRadius;
+              if (distanceTop >= 0 && distanceTop <= maxDistance) {
+                topRadius =
+                  maxRadius -
+                  (maxRadius - minRadius) * (distanceTop / maxDistance);
+              }
 
-            let bottomRadius = minRadius;
-            if (distanceBottom >= 0 && distanceBottom <= maxDistance) {
-              bottomRadius =
-                maxRadius -
-                (maxRadius - minRadius) * (distanceBottom / maxDistance);
-            }
+              let bottomRadius = minRadius;
+              if (distanceBottom >= 0 && distanceBottom <= maxDistance) {
+                bottomRadius =
+                  maxRadius -
+                  (maxRadius - minRadius) * (distanceBottom / maxDistance);
+              }
 
-            item.style.setProperty("--item-top-radius", `${topRadius}rem`);
-            item.style.setProperty(
-              "--item-bottom-radius",
-              `${bottomRadius}rem`,
-            );
-          });
+              item.style.setProperty("--item-top-radius", `${topRadius}rem`);
+              item.style.setProperty(
+                "--item-bottom-radius",
+                `${bottomRadius}rem`,
+              );
+            });
+          }
+
+          container.addEventListener("scroll", updateItemRadii);
+          window.addEventListener("resize", updateItemRadii);
+
+          const observer = new MutationObserver(() =>
+            setTimeout(updateItemRadii, 10),
+          );
+          observer.observe(container, { childList: true, subtree: true });
+
+          setTimeout(updateItemRadii, 50);
         }
 
-        container.addEventListener("scroll", updateItemRadii);
-        window.addEventListener("resize", updateItemRadii);
+        const observer = new MutationObserver((mutations, obs) => {
+          const container = parent.querySelector(".results-list");
+          if (container) {
+            setupResultsList(container);
+            obs.disconnect();
+          }
+        });
 
-        const observer = new MutationObserver(() =>
-          setTimeout(updateItemRadii, 10),
-        );
-        observer.observe(container, { childList: true, subtree: true });
+        observer.observe(parent, { childList: true, subtree: true });
 
-        setTimeout(updateItemRadii, 50);
+        const container = parent.querySelector(".results-list");
+        if (container) {
+          setupResultsList(container);
+          observer.disconnect();
+        }
       });
     </script>
   </body>
