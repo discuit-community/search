@@ -35,7 +35,10 @@
           x-bind:class="{ 'loading': $store.search.fetchingResults }"
         >
           <div class="results-container">
-            <template x-if="$store.search.results.length > 0">
+            <template
+              x-if="$store.search.results.length > 0"
+              x-show="!$store.search.fetchingResults"
+            >
               <ul class="results-list">
                 <template
                   x-for="result in $store.search.results"
@@ -108,6 +111,9 @@
             <template x-if="$store.search.query.trim() === ''">
               <p class="no-query">please enter a search term.</p>
             </template>
+
+            <div class="results-gradient results-gradient-top"></div>
+            <div class="results-gradient results-gradient-bottom"></div>
           </div>
         </div>
 
@@ -190,14 +196,23 @@
                 await new Promise((resolve) => setTimeout(resolve, 500));
                 searchStore.results = data.hits || [];
                 searchStore.totalHits = data.estimatedTotalHits || 0;
-                searchStore.fetchingResults = false;
               })
               .catch((error) => {
                 console.error("error fetching search results:", error);
-                searchStore.fetchingResults = false;
                 searchStore.results = [];
                 searchStore.totalHits = 0;
+              })
+              .finally(() => {
+                searchStore.fetchingResults = false;
               });
+
+            const container = document.querySelector(".results-list");
+            if (container) {
+              container.scrollTo({
+                top: 0,
+                behavior: "smooth",
+              });
+            }
           },
         };
       }
@@ -219,24 +234,34 @@
             const minRadius = 0.5;
             const maxRadius = 2.7;
 
-            items.forEach((item) => {
+            for (const item of items) {
               const itemRect = item.getBoundingClientRect();
 
               const distanceTop = itemRect.top - containerRect.top;
               const distanceBottom = containerRect.bottom - itemRect.bottom;
 
               let topRadius = minRadius;
+              // if the item's top is within maxDistance from the container's
+              //   top, interpolate the top border radius between maxRadius and
+              //   minRadius
               if (distanceTop >= 0 && distanceTop <= maxDistance) {
                 topRadius =
                   maxRadius -
                   (maxRadius - minRadius) * (distanceTop / maxDistance);
+              } else if (distanceTop < 0) {
+                topRadius = maxRadius;
               }
 
               let bottomRadius = minRadius;
+              // if the item's bottom is within maxDistance from the
+              //   container's bottom, similarly interpolate the bottom border
+              //   radius
               if (distanceBottom >= 0 && distanceBottom <= maxDistance) {
                 bottomRadius =
                   maxRadius -
                   (maxRadius - minRadius) * (distanceBottom / maxDistance);
+              } else if (distanceBottom < 0) {
+                bottomRadius = maxRadius;
               }
 
               item.style.setProperty("--item-top-radius", `${topRadius}rem`);
@@ -244,7 +269,7 @@
                 "--item-bottom-radius",
                 `${bottomRadius}rem`,
               );
-            });
+            }
           }
 
           container.addEventListener("scroll", updateItemRadii);
