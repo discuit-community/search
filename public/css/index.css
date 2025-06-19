@@ -275,6 +275,11 @@ header {
           &:hover {
             background: hsla(var(--surface0) / 0.3);
           }
+          &:focus-visible {
+            outline: none;
+            background: hsla(var(--surface0) / 0.4);
+            border-color: hsla(var(--subtext0) / 0.1);
+          }
           &:active {
             background: hsla(var(--surface0) / 0.4);
             border-color: hsla(var(--subtext0) / 0.1);
@@ -287,7 +292,8 @@ header {
         color: hsl(var(--text));
       }
 
-      &:hover {
+      &:hover,
+      &:focus-within {
         background: hsla(var(--surface0) / 0.35);
       }
       /* &:active {
