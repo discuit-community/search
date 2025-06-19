@@ -254,6 +254,206 @@ header {
             z-index: -1;
           }
         }
+
+        .result-body-collapsed {
+          max-height: 12.8em;
+          overflow: hidden;
+          position: relative;
+          &::after {
+            content: "";
+            display: block;
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 2.5em;
+            background: linear-gradient(
+              to bottom,
+              transparent,
+              hsla(var(--crust) / 1)
+            );
+            border-radius: 0 0 1rem 1rem;
+            pointer-events: none;
+          }
+        }
+
+        .result-body-container {
+          button.show-more-btn {
+            display: inline-block;
+            margin-top: 0.5rem;
+            padding: 0.5rem 0.8rem;
+            background: hsla(var(--mantle) / 1);
+            color: hsl(var(--subtext1));
+            border: 1px solid hsla(var(--subtext0) / 0.1);
+            border-radius: 2rem;
+            font-size: 0.8rem;
+            cursor: pointer;
+
+            transition: background 0.2s;
+          }
+          .show-more-btn:hover,
+          .show-more-btn:focus {
+            background: hsla(var(--blue) / 0.5);
+            outline: none;
+          }
+
+          /* markdown */
+          .result-body {
+            font-size: 0.98em;
+            line-height: 1.6;
+            color: hsl(var(--subtext1));
+            word-break: break-word;
+            margin-bottom: 0.5em;
+
+            /* headings */
+            h1,
+            h2,
+            h3,
+            h4,
+            h5,
+            h6 {
+              color: hsl(var(--text));
+              font-weight: 700;
+              margin-top: 1.2em;
+              margin-bottom: 0.5em;
+              line-height: 1.2;
+            }
+            h1 {
+              font-size: 1.5em;
+            }
+            h2 {
+              font-size: 1.3em;
+            }
+            h3 {
+              font-size: 1.15em;
+            }
+            h4,
+            h5,
+            h6 {
+              font-size: 1em;
+            }
+
+            /* paragraphs */
+            p {
+              margin: 0.5em 0;
+            }
+
+            /* lists */
+            ul,
+            ol {
+              margin: 0.5em 0 0.5em 1.5em;
+              padding-left: 1.2em;
+            }
+            . li {
+              margin: 0.2em 0;
+            }
+
+            /* blockquotes */
+            blockquote {
+              border-left: 3px solid hsl(var(--blue));
+              background: hsla(var(--surface0) / 0.5);
+              color: hsl(var(--subtext0));
+              margin: 0.8em 0;
+              padding: 0.5em 1em;
+              border-radius: 0.4em;
+              font-style: italic;
+            }
+
+            /* code */
+            code {
+              background: hsla(var(--mantle) / 0.8);
+              color: hsl(var(--mauve));
+              padding: 0.15em 0.4em;
+              border-radius: 0.3em;
+              font-size: 0.95em;
+              font-family: "JetBrains Mono", "Fira Mono", "Consolas", monospace;
+              white-space: pre-wrap;
+            }
+            pre {
+              background: hsla(var(--mantle) / 1);
+              color: hsl(var(--mauve));
+              padding: 0.8em 1em;
+              border-radius: 0.5em;
+              overflow-x: auto;
+              margin: 1em 0;
+              font-size: 0.97em;
+              font-family: "JetBrains Mono", "Fira Mono", "Consolas", monospace;
+              code {
+                background: none;
+                padding: 0;
+                color: inherit;
+                font-size: inherit;
+              }
+            }
+
+            a {
+              color: hsl(var(--blue));
+              text-decoration: underline;
+              word-break: break-all;
+              transition: color 0.2s;
+            }
+            a:hover,
+            a:focus {
+              color: hsl(var(--mauve));
+            }
+
+            /* horizontal rule */
+            hr {
+              border: none;
+              border-top: 1px solid hsla(var(--subtext0) / 0.2);
+              margin: 1em 0;
+            }
+
+            /* images */
+            img {
+              max-width: 100%;
+              border-radius: 0.4em;
+              margin: 0.5em 0;
+              display: block;
+            }
+
+            /* tables */
+            table {
+              border-collapse: collapse;
+              margin: 1em 0;
+              width: 100%;
+
+              border-radius: 1rem;
+              overflow: hidden;
+              background: hsla(var(--mantle) / 1);
+
+              th,
+              td {
+                padding: 0.4em 0.7em;
+                text-align: left;
+              }
+              th {
+                background: hsla(var(--surface1) / 0.5);
+                color: hsl(var(--text));
+                font-weight: 600;
+              }
+              tr:nth-child(even) td {
+                background: hsla(var(--surface0) / 0.2);
+              }
+            }
+
+            /* bold */
+            strong {
+              color: hsl(var(--text));
+              font-weight: 600;
+            }
+            em {
+              font-style: italic;
+            }
+
+            > :first-child {
+              margin-top: 0;
+            }
+            > :last-child {
+              margin-bottom: 0;
+            }
+          }
+        }
       }
 
       .result-actions {

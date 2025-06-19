@@ -10,6 +10,14 @@
       defer
       src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
     ></script>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"
+    ></script>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js"
+    ></script>
   </head>
   <body :class="'theme-mocha'">
     <div class="app">
@@ -79,10 +87,41 @@
                           x-html="result._formatted.title"
                         ></h2>
                         <template x-if="result._formatted !== ''">
-                          <p
-                            class="result-body"
-                            x-html="result._formatted.body || ''"
-                          ></p>
+                          <div
+                            class="result-body-container"
+                            x-data="{
+                              expanded: false,
+                              needsCollapse: false,
+                              checkCollapse() {
+                                this.$nextTick(() => {
+                                  const el = this.$refs.body;
+                                  if (!el) return;
+
+                                  const lineHeight = parseFloat(getComputedStyle(el).lineHeight) || 20;
+                                  const maxLines = 8;
+                                  const maxHeight = lineHeight * maxLines;
+                                  this.needsCollapse = el.scrollHeight > maxHeight + 1;
+                                });
+                              }
+                            }"
+                            x-init="checkCollapse()"
+                            style="position: relative"
+                          >
+                            <p
+                              class="result-body"
+                              :class="!expanded && needsCollapse ? 'result-body-collapsed' : ''"
+                              x-ref="body"
+                              x-html="renderMarkdown(result._formatted.body || '')"
+                            ></p>
+                            <button
+                              x-show="needsCollapse"
+                              @click="expanded = !expanded"
+                              type="button"
+                              class="show-more-btn"
+                              x-text="expanded ? 'Show less' : 'Show more'"
+                              :aria-expanded="expanded"
+                            ></button>
+                          </div>
                         </template>
                       </div>
                     </div>
@@ -177,11 +216,18 @@
     </div>
 
     <script>
+      function renderMarkdown(md) {
+        if (!md) return "";
+        return DOMPurify.sanitize(marked.parse(md));
+      }
+
       function setup() {
         return {
           query: "",
           results: [],
           fetchingResults: false,
+          renderMarkdown,
+
           init() {
             Alpine.store("search", {
               query: "",
