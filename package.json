@@ -1,26 +1,26 @@
 {
-  "name": "search",
-  "version": "1.0.0",
-  "license": "AGPL-3.0-only",
-  "scripts": {
-    "dev": "bun run --watch src/index.ts",
-    "fmt": "biome format --write",
-    "lint": "biome lint --write src/",
-    "check": "biome check --write src/"
-  },
-  "dependencies": {
-    "@discuit-community/client": "^0.4.1",
-    "@discuit-community/jetstream": "^2.0.0",
-    "@discuit-community/types": "^0.2.0",
-    "@elysiajs/cors": "^1.3.3",
-    "@elysiajs/static": "^1.3.0",
-    "@elysiajs/swagger": "^1.3.0",
-    "elysia": "latest",
-    "meilisearch": "^0.51.0"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "1.9.4",
-    "bun-types": "latest"
-  },
-  "module": "src/index.js"
+	"name": "search",
+	"version": "1.0.0",
+	"license": "AGPL-3.0-only",
+	"scripts": {
+		"dev": "bun run --watch src/index.ts",
+		"fmt": "biome format --write",
+		"lint": "biome lint --write src/",
+		"check": "biome check --write src/"
+	},
+	"dependencies": {
+		"@discuit-community/client": "^0.4.1",
+		"@discuit-community/jetstream": "^2.0.0",
+		"@discuit-community/types": "^0.2.0",
+		"@elysiajs/cors": "^1.3.3",
+		"@elysiajs/static": "^1.3.0",
+		"@elysiajs/swagger": "^1.3.0",
+		"elysia": "latest",
+		"meilisearch": "^0.51.0"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "1.9.4",
+		"bun-types": "latest"
+	},
+	"module": "src/index.js"
 }

@@ -7,7 +7,7 @@ import { postsIndex, searchClient } from "./meilisearch";
 import ENV from "./env";
 
 const client = new DiscuitClient({
-  apiUrl: ENV.DISCUIT.API_URL
+	apiUrl: ENV.DISCUIT.API_URL,
 });
 
 function formatSize(bytes: number): string {
@@ -209,86 +209,89 @@ export async function syncIndexWithDatabase() {
 }
 
 export function savePosts(posts: PostModel[]): PostModel[] {
-  const stmt = db.prepare(
-    "insert or ignore into posts (publicId, title, body, createdAt, communityName, username, type, hotness, upvotes, downvotes, isPinned, deleted) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-  );
-  const inserted: PostModel[] = [];
-  db.transaction(() => {
-    for (const p of posts) {
-      const res = stmt.run(
-        p.raw.publicId,
-        p.raw.title,
-        p.raw.body,
-        p.raw.createdAt,
-        p.raw.communityName,
-        p.raw.username,
-        p.raw.type,
-        p.raw.hotness,
-        p.raw.upvotes,
-        p.raw.downvotes,
-        p.raw.isPinned,
-        p.raw.deleted,
-      );
-      if (res.changes === 1) inserted.push(p);
-    }
-  })();
-  console.log(
-    `  inserted ${inserted.length} posts: ${inserted.slice(0, 10).map(p => p.raw.publicId).join(", ")}`,
-  );
-  return inserted;
+	const stmt = db.prepare(
+		"insert or ignore into posts (publicId, title, body, createdAt, communityName, username, type, hotness, upvotes, downvotes, isPinned, deleted) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+	);
+	const inserted: PostModel[] = [];
+	db.transaction(() => {
+		for (const p of posts) {
+			const res = stmt.run(
+				p.raw.publicId,
+				p.raw.title,
+				p.raw.body,
+				p.raw.createdAt,
+				p.raw.communityName,
+				p.raw.username,
+				p.raw.type,
+				p.raw.hotness,
+				p.raw.upvotes,
+				p.raw.downvotes,
+				p.raw.isPinned,
+				p.raw.deleted,
+			);
+			if (res.changes === 1) inserted.push(p);
+		}
+	})();
+	console.log(
+		`  inserted ${inserted.length} posts: ${inserted
+			.slice(0, 10)
+			.map((p) => p.raw.publicId)
+			.join(", ")}`,
+	);
+	return inserted;
 }
 
 async function indexPosts(posts: PostModel[]) {
-  if (posts.length === 0) return;
-  const docs = posts.map(p => p.raw);
-  const response = await postsIndex.addDocuments(docs);
-  await searchClient.tasks.waitForTask(response.taskUid);
-  console.log(`  indexed ${docs.length} posts in Meilisearch`);
+	if (posts.length === 0) return;
+	const docs = posts.map((p) => p.raw);
+	const response = await postsIndex.addDocuments(docs);
+	await searchClient.tasks.waitForTask(response.taskUid);
+	console.log(`  indexed ${docs.length} posts in Meilisearch`);
 }
 
 export async function watchNewPosts() {
-  const unprocessedPosts: PostModel[] = [];
-  const BATCH_SIZE = 10;
-  const BATCH_TIMEOUT = 5000;
-  let batchTimeout: NodeJS.Timeout | null = null;
+	const unprocessedPosts: PostModel[] = [];
+	const BATCH_SIZE = 10;
+	const BATCH_TIMEOUT = 5000;
+	let batchTimeout: NodeJS.Timeout | null = null;
 
-  const jetstream = new Jetstream({ client, retryAmount: 3 });
-  jetstream.start();
-  console.log("jetstream is listening")
+	const jetstream = new Jetstream({ client, retryAmount: 3 });
+	jetstream.start();
+	console.log("jetstream is listening");
 
-  async function processBatch() {
-    if (unprocessedPosts.length === 0) return;
-    console.log(`processing batch of ${unprocessedPosts.length} posts...`);
-    const batch = unprocessedPosts.splice(0, BATCH_SIZE);
-    const inserted = savePosts(batch);
-    await indexPosts(inserted);
-    console.log(`processed batch of ${inserted.length} posts.`);
-  }
+	async function processBatch() {
+		if (unprocessedPosts.length === 0) return;
+		console.log(`processing batch of ${unprocessedPosts.length} posts...`);
+		const batch = unprocessedPosts.splice(0, BATCH_SIZE);
+		const inserted = savePosts(batch);
+		await indexPosts(inserted);
+		console.log(`processed batch of ${inserted.length} posts.`);
+	}
 
-  function scheduleTimeout() {
-    if (batchTimeout) return;
-    batchTimeout = setTimeout(async () => {
-      await processBatch();
-      batchTimeout = null;
-      if (unprocessedPosts.length > 0) scheduleTimeout();
-    }, BATCH_TIMEOUT);
-  }
+	function scheduleTimeout() {
+		if (batchTimeout) return;
+		batchTimeout = setTimeout(async () => {
+			await processBatch();
+			batchTimeout = null;
+			if (unprocessedPosts.length > 0) scheduleTimeout();
+		}, BATCH_TIMEOUT);
+	}
 
-  jetstream.on(Topic.NEW_POST, (event) => {
-    const post = event as Post;
-    if (!post) return;
+	jetstream.on(Topic.NEW_POST, (event) => {
+		const post = event as Post;
+		if (!post) return;
 
-    unprocessedPosts.push(new PostModel(client, post));
-    console.log(`new post with publicId ${post.publicId} received.`);
+		unprocessedPosts.push(new PostModel(client, post));
+		console.log(`new post with publicId ${post.publicId} received.`);
 
-    if (unprocessedPosts.length >= BATCH_SIZE) {
-      if (batchTimeout) {
-        clearTimeout(batchTimeout);
-        batchTimeout = null;
-      }
-      processBatch();
-    } else {
-      scheduleTimeout();
-    }
-  });
+		if (unprocessedPosts.length >= BATCH_SIZE) {
+			if (batchTimeout) {
+				clearTimeout(batchTimeout);
+				batchTimeout = null;
+			}
+			processBatch();
+		} else {
+			scheduleTimeout();
+		}
+	});
 }
