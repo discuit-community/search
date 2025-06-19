@@ -1,5 +1,6 @@
 import { Database } from "bun:sqlite";
 import { DiscuitClient, type PostModel } from "@discuit-community/client";
+import { savePosts } from "../src/sync";
 import ENV from "../src/env";
 
 const client = new DiscuitClient({
@@ -24,38 +25,7 @@ db.run(`
 
     isPinned boolean,
     deleted boolean
-  )
-
-`);
-
-function savePosts(posts: PostModel[]) {
-  const stmt = db.prepare(
-    "insert or ignore into posts (publicId, title, body, createdAt, communityName, username, type, hotness, upvotes, downvotes, isPinned, deleted) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-  );
-  const inserted: string[] = [];
-  db.transaction(() => {
-    for (const p of posts) {
-      const res = stmt.run(
-        p.raw.publicId,
-        p.raw.title,
-        p.raw.body,
-        p.raw.createdAt,
-        p.raw.communityName,
-        p.raw.username,
-        p.raw.type,
-        p.raw.hotness,
-        p.raw.upvotes,
-        p.raw.downvotes,
-        p.raw.isPinned,
-        p.raw.deleted,
-      );
-      if (res.changes === 1) inserted.push(p.raw.publicId);
-    }
-  })();
-  console.log(
-    `  inserted ${inserted.length} posts: ${inserted.slice(0, 10).join(", ")}`,
-  );
-}
+  )`);
 
 async function fetchAllPosts() {
   const posts: PostModel[] = [];

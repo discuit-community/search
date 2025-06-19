@@ -11,6 +11,7 @@ export default {
 		PORT: process.env.SERVER_PORT || 3001,
 	},
 	DISCUIT: {
-		API_URL: process.env.DISCUIT_URL || "http://discuit./api",
+		API_URL: process.env.DISCUIT_URL || "http://discuit.org/api",
+		BASE_URL: process.env.DISCUIT_BASE_URL || "http://discuit.org",
 	},
 };

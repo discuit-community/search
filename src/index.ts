@@ -5,7 +5,7 @@ import { staticPlugin } from "@elysiajs/static";
 
 import ENV from "./env";
 import { postsIndex } from "./meilisearch";
-import { syncIndexWithDatabase } from "./sync";
+import { syncIndexWithDatabase, watchNewPosts } from "./sync";
 
 const ARGS = {
   SKIP_SYNC: process.argv.includes("--skip-sync"),
@@ -230,10 +230,13 @@ async function main() {
     );
   else await syncIndexWithDatabase();
 
+
   app.listen(ENV.SERVER.PORT);
   console.log(
     `search is running at ${app.server?.hostname}:${app.server?.port}`,
   );
+
+  await watchNewPosts();
 }
 
 main().catch((err) => {
