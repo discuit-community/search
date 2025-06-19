@@ -316,7 +316,6 @@
             )
               .then((response) => response.json())
               .then(async (data) => {
-                await new Promise((resolve) => setTimeout(resolve, 500));
                 searchStore.results = data.hits || [];
                 searchStore.totalHits = data.estimatedTotalHits || 0;
               })
