@@ -414,5 +414,90 @@ header {
     flex-direction: row;
     align-items: center;
     gap: 1rem;
+
+    padding-bottom: 1rem;
+    border-bottom: 1px solid hsla(var(--subtext0) / 0.1);
   }
+
+  .footer-themes {
+    h3 {
+      font-size: 1.2em;
+      color: hsl(var(--subtext1));
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    p {
+      font-size: 0.98em;
+      color: hsl(var(--subtext1));
+      margin-top: 0;
+      a {
+        color: hsl(var(--mauve));
+        text-decoration: underline;
+        font-weight: 500;
+        transition: color 0.2s cubic-bezier(0.2, 0, 0, 1);
+        &:hover {
+          color: hsl(var(--blue));
+        }
+      }
+    }
+    .themes-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    button {
+      flex: 1;
+      padding: 0.25rem 1.2rem;
+      border-radius: 2rem;
+      border: 1px solid hsla(var(--subtext0) / 0.1);
+      background: hsla(var(--mantle) / 1);
+      color: hsl(var(--subtext1));
+      font-size: 1em;
+      cursor: pointer;
+      font-family: inherit;
+      transition:
+        background 0.2s cubic-bezier(0.2, 0, 0, 1),
+        border-color 0.2s cubic-bezier(0.2, 0, 0, 1),
+        color 0.2s cubic-bezier(0.2, 0, 0, 1);
+
+      &:hover {
+        background: hsla(var(--surface0) / 0.9);
+        border-color: hsla(var(--blue) / 0.2);
+        color: hsl(var(--blue));
+      }
+
+      &:focus-visible {
+        outline: none;
+        border-color: hsla(var(--blue) / 0.5);
+        background: hsla(var(--surface0) / 0.9);
+        color: hsl(var(--blue));
+      }
+
+      &:active {
+        background: hsla(var(--surface0) / 1);
+        border-color: hsla(var(--blue) / 0.3);
+        color: hsl(var(--blue));
+      }
+
+      &.active,
+      &[aria-current="true"] {
+        background: hsla(var(--blue) / 0.12);
+        border-color: hsla(var(--blue) / 0.5);
+        color: hsl(var(--blue));
+      }
+    }
+  }
+}
+
+* {
+  transition:
+    border-color 0.2s cubic-bezier(0.2, 0, 0, 1),
+    color 0.2s cubic-bezier(0.2, 0, 0, 1),
+    background 0.2s cubic-bezier(0.2, 0, 0, 1);
 }
