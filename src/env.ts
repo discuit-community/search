@@ -6,6 +6,9 @@ export default {
 		SKIP_SYNC:
 			process.env.SEARCH_SKIP_SYNC === "1" ||
 			process.env.SEARCH_SKIP_SYNC === "true",
+		TIMEOUT: process.env.SEARCH_TIMEOUT 
+		  ? parseInt(process.env.SEARCH_TIMEOUT) 
+		  : 5000,
 	},
 	SERVER: {
 		PORT: process.env.SERVER_PORT || 3001,

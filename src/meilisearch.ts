@@ -6,6 +6,7 @@ export const SEARCH_URL = `${ENV.SEARCH.ADDRESS}:${ENV.SEARCH.PORT}`;
 export const searchClient = new Meilisearch({
 	host: SEARCH_URL,
 	apiKey: ENV.SEARCH.KEY,
+	timeout: ENV.SEARCH.TIMEOUT,
 });
 
 export const postsIndex = searchClient.index("posts");
