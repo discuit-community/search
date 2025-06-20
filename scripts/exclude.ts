@@ -138,6 +138,8 @@ async function redactMeilisearch() {
 async function main() {
   await redactSqlite();
   await redactMeilisearch();
+
+  console.log("you might want to run scripts/index.ts to reindex posts.");
 }
 
 main();
