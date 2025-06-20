@@ -2,6 +2,10 @@
 
 a search api & interface for [discuit].
 
+## privacy
+
+see [public/privacy.md](public/privacy.md) for our privacy policy.
+
 ## how it works
 
 this project provides a fast, filterable search api for discuit, using
