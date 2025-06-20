@@ -2,6 +2,7 @@ import { Elysia, t } from "elysia";
 import { cors } from "@elysiajs/cors";
 import { swagger } from "@elysiajs/swagger";
 import { staticPlugin } from "@elysiajs/static";
+import { createGzip } from "node:zlib";
 
 import ENV from "./env";
 import { postsIndex } from "./meilisearch";
@@ -47,6 +48,62 @@ const app = new Elysia()
 		}),
 	)
 	.use(staticPlugin({ prefix: "/" }))
+	.onAfterHandle(async ({ set, request, response }) => {
+		const acceptEncoding = request.headers.get("accept-encoding") || "";
+		let contentType = "";
+
+		if (set.headers["Content-Type"]) {
+			contentType = String(set.headers["Content-Type"]);
+		} else if (response instanceof Response) {
+			contentType = response.headers.get("content-type") || "";
+		}
+
+		if (
+			(contentType.includes("text/html") || contentType.includes("text/css")) &&
+			acceptEncoding.includes("gzip")
+		) {
+			let body: Uint8Array | null = null;
+			let headers: Record<string, string> = {};
+
+			if (response instanceof Response) {
+				body = new Uint8Array(await response.arrayBuffer());
+				response.headers.forEach((value, key) => {
+					headers[key] = value;
+				});
+			} else if (response instanceof Uint8Array) {
+				body = response;
+				headers = Object.fromEntries(
+					Object.entries(set.headers).map(([k, v]) => [k, String(v)]),
+				);
+			} else if (typeof response === "string") {
+				body = Buffer.from(response, "utf-8");
+				headers = Object.fromEntries(
+					Object.entries(set.headers).map(([k, v]) => [k, String(v)]),
+				);
+			} else {
+				return response;
+			}
+
+			const gzipped = await new Promise<Buffer>((resolve, reject) => {
+				const gzip = createGzip();
+				const chunks: Buffer[] = [];
+				gzip.on("data", (chunk) => chunks.push(chunk));
+				gzip.on("end", () => resolve(Buffer.concat(chunks)));
+				gzip.on("error", reject);
+				gzip.end(body!);
+			});
+
+			headers["content-encoding"] = "gzip";
+			delete headers["content-length"];
+
+			return new Response(gzipped, {
+				status: 200,
+				headers,
+			});
+		}
+
+		return response;
+	})
 
 	.error({
 		SearchFailed,
