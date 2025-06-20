@@ -1,8 +1,22 @@
+import fs from "node:fs";
+
 const RESET = "\x1b[0m";
 const FG_CYAN = "\x1b[36m";
 const FG_YELLOW = "\x1b[33m";
 const FG_GREEN = "\x1b[32m";
 const FG_MAGENTA = "\x1b[35m";
+
+type Redactions = { usernames: string[]; communities: string[] };
+
+const redactionsExist = fs.existsSync("redactions.json");
+if (!redactionsExist) console.error("redactions.json file not found.");
+
+const REDACTIONS = redactionsExist
+	? (JSON.parse(fs.readFileSync("redactions.json", "utf-8")) as Redactions)
+	: {
+			usernames: [],
+			communities: [],
+		};
 
 const config = {
 	SEARCH: {
@@ -22,6 +36,10 @@ const config = {
 	DISCUIT: {
 		API_URL: process.env.DISCUIT_URL || "http://discuit.org/api",
 		BASE_URL: process.env.DISCUIT_BASE_URL || "http://discuit.org",
+	},
+	REDACTIONS: {
+		usernames: REDACTIONS.usernames || [],
+		communities: REDACTIONS.communities || [],
 	},
 };
 

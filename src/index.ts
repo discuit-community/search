@@ -6,6 +6,7 @@ import { staticPlugin } from "@elysiajs/static";
 import ENV from "./env";
 import { postsIndex } from "./meilisearch";
 import { syncIndexWithDatabase, watchNewPosts } from "./sync";
+import { redactMentions } from "./utils/redact";
 
 const ARGS = {
 	SKIP_SYNC: process.argv.includes("--skip-sync"),
@@ -121,6 +122,27 @@ const app = new Elysia()
 					highlightPostTag: "</span>",
 				});
 
+				res.hits = res.hits.map((hit) => {
+					const redacted = {
+						...hit,
+						title: redactMentions(hit.title),
+						content: redactMentions(hit.content ?? hit.body ?? ""),
+						body: redactMentions(hit.body ?? ""),
+						username: redactMentions(hit.username ?? ""),
+						communityName: redactMentions(hit.communityName ?? ""),
+					};
+
+					if (hit._formatted) {
+						redacted._formatted = {};
+						for (const [key, value] of Object.entries(hit._formatted)) {
+							redacted._formatted[key] =
+								typeof value === "string" ? redactMentions(value) : value;
+						}
+					}
+
+					return redacted;
+				});
+
 				return res;
 			} catch (error) {
 				throw new SearchFailed(
@@ -191,6 +213,27 @@ const app = new Elysia()
 					limit: 10,
 					attributesToRetrieve: ["title", "communityName"],
 				});
+				res.hits = res.hits.map((hit) => {
+					const redacted = {
+						...hit,
+						title: redactMentions(hit.title),
+						content: redactMentions(hit.content ?? hit.body ?? ""),
+						body: redactMentions(hit.body ?? ""),
+						username: redactMentions(hit.username ?? ""),
+						communityName: redactMentions(hit.communityName ?? ""),
+					};
+
+					if (hit._formatted) {
+						redacted._formatted = {};
+						for (const [key, value] of Object.entries(hit._formatted)) {
+							redacted._formatted[key] =
+								typeof value === "string" ? redactMentions(value) : value;
+						}
+					}
+
+					return redacted;
+				});
+
 				return res.hits.map((hit) => ({
 					title: hit.title,
 					communityName: hit.communityName,
