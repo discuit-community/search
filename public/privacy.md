@@ -1,4 +1,4 @@
-# pivacy policy
+# privacy policy
 
 discuit search does not collect, store, or sell any personal data. we do not
 use cookies, analytics, or any third-party trackers. your search queries are
@@ -19,6 +19,6 @@ delete it as soon as possible.
 you can email me at `hai@wlo.moe`, message me on discord @ `sillowww`, or find
 me somewhere on discuit, https://discuit.org/@sillowww
 
--------------------------------------------------------------------------------
+---
 
 <3
