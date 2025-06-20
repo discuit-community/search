@@ -5,6 +5,7 @@ import DiscuitClient, { PostModel } from "@discuit-community/client";
 import { db } from "./db";
 import { postsIndex, searchClient } from "./meilisearch";
 import ENV from "./env";
+const TIMEOUT = ENV.SEARCH.TIMEOUT;
 
 const client = new DiscuitClient({
 	apiUrl: ENV.DISCUIT.API_URL,
@@ -176,7 +177,9 @@ export async function syncIndexWithDatabase() {
 			batchSize,
 			async (batchItems) => {
 				const response = await postsIndex.addDocuments(batchItems);
-				await searchClient.tasks.waitForTask(response.taskUid);
+				await searchClient.tasks.waitForTask(response.taskUid, {
+					timeout: TIMEOUT,
+				});
 			},
 			{ present: "adding", past: "added" },
 		);
@@ -187,7 +190,9 @@ export async function syncIndexWithDatabase() {
 			batchSize,
 			async (batchItems) => {
 				const response = await postsIndex.addDocuments(batchItems);
-				await searchClient.tasks.waitForTask(response.taskUid);
+				await searchClient.tasks.waitForTask(response.taskUid, {
+					timeout: TIMEOUT,
+				});
 			},
 			{ present: "updating", past: "updated" },
 		);
@@ -198,7 +203,9 @@ export async function syncIndexWithDatabase() {
 			batchSize,
 			async (batchItems) => {
 				const response = await postsIndex.deleteDocuments(batchItems);
-				await searchClient.tasks.waitForTask(response.taskUid);
+				await searchClient.tasks.waitForTask(response.taskUid, {
+					timeout: TIMEOUT,
+				});
 			},
 			{ present: "deleting", past: "deleted" },
 		);
@@ -245,7 +252,7 @@ async function indexPosts(posts: PostModel[]) {
 	if (posts.length === 0) return;
 	const docs = posts.map((p) => p.raw);
 	const response = await postsIndex.addDocuments(docs);
-	await searchClient.tasks.waitForTask(response.taskUid);
+	await searchClient.tasks.waitForTask(response.taskUid, { timeout: TIMEOUT });
 	console.log(`  indexed ${docs.length} posts in Meilisearch`);
 }
 

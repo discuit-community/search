@@ -242,3 +242,12 @@ main().catch((err) => {
 	console.error("error starting the server:", err);
 	process.exit(1);
 });
+
+// on error
+process.on("uncaughtException", (err) => {
+	console.error("uncaught exception:", err);
+});
+
+process.on("unhandledRejection", (reason, promise) => {
+	console.error("unhandled rejection at:", promise, "reason:", reason);
+});

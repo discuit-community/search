@@ -1,4 +1,10 @@
-export default {
+const RESET = "\x1b[0m";
+const FG_CYAN = "\x1b[36m";
+const FG_YELLOW = "\x1b[33m";
+const FG_GREEN = "\x1b[32m";
+const FG_MAGENTA = "\x1b[35m";
+
+const config = {
 	SEARCH: {
 		PORT: process.env.SEARCH_PORT || 7700,
 		ADDRESS: process.env.SEARCH_ADDR || "http://127.0.0.1",
@@ -18,3 +24,19 @@ export default {
 		BASE_URL: process.env.DISCUIT_BASE_URL || "http://discuit.org",
 	},
 };
+
+console.log(`${FG_CYAN}CONFIGURATION:${RESET}`);
+for (const [key, value] of Object.entries(config)) {
+	if (typeof value === "object") {
+		console.log(`  ${FG_CYAN}${key}:${RESET}`);
+		for (const [subKey, subValue] of Object.entries(value)) {
+			console.log(
+				`    ${FG_YELLOW}${subKey}${RESET}: ${FG_GREEN}${subValue}${RESET}`,
+			);
+		}
+	} else {
+		console.log(`${FG_MAGENTA}${key}${RESET}: ${FG_GREEN}${value}${RESET}`);
+	}
+}
+console.log();
+export default config;
