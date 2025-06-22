@@ -1,11 +1,31 @@
 <script setup lang="ts">
 import type { SearchResult } from "@/stores/searchStore";
+import { ref, watch, onMounted, nextTick } from "vue";
 import { marked } from "marked";
 
 const props = defineProps<{
     result: SearchResult;
     index: number;
 }>();
+
+const isExpanded = ref(false);
+const isCollapsible = ref(false);
+const bodyRef = ref<HTMLElement | null>(null);
+
+onMounted(async () => {
+    await nextTick();
+    if (bodyRef.value) {
+        const style = window.getComputedStyle(bodyRef.value);
+        const lineHeight =
+            parseFloat(style.lineHeight) === 0
+                ? 20
+                : parseFloat(style.lineHeight);
+        const totalHeight = bodyRef.value.offsetHeight;
+        const maxHeight = lineHeight * 8;
+
+        isCollapsible.value = totalHeight > maxHeight + 2;
+    }
+});
 
 const result = props.result;
 
@@ -77,9 +97,25 @@ const notation: Notation = "d-slash" as Notation;
             <h3 class="result__content-title">
                 {{ result.title }}
             </h3>
-            <p class="result__content-body" v-if="result.body !== ''">
-                <span class="markdown" v-html="body"></span>
-            </p>
+            <div class="result__content-body" v-if="result.body !== ''">
+                <div
+                    class="markdown post-body"
+                    v-html="body"
+                    :class="{
+                        collapsed: !isExpanded && isCollapsible,
+                        oversized: isCollapsible,
+                    }"
+                    ref="bodyRef"
+                ></div>
+                <button
+                    v-if="isCollapsible"
+                    class="toggle-btn"
+                    @click="isExpanded = !isExpanded"
+                    type="button"
+                >
+                    {{ isExpanded ? "show less" : "show more" }}
+                </button>
+            </div>
         </div>
 
         <div class="result__footer">
@@ -102,7 +138,6 @@ const notation: Notation = "d-slash" as Notation;
     display: flex;
     flex-direction: column;
     border: 1px solid hsla(var(--subtext0) / 0.1);
-    padding: 0.5rem;
     background: hsla(var(--surface0) / 0.1);
     border-radius: var(--item-top-radius, 0.5rem) var(--item-top-radius, 0.5rem)
         var(--item-bottom-radius, 0.5rem) var(--item-bottom-radius, 0.5rem);
@@ -117,7 +152,7 @@ const notation: Notation = "d-slash" as Notation;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    padding: 0.5rem;
+    padding: 0.75rem;
     font-size: 0.9rem;
     color: hsl(var(--subtext1));
     gap: 0.5rem;
@@ -145,7 +180,7 @@ const notation: Notation = "d-slash" as Notation;
 }
 
 .result__content {
-    padding: 0.5rem;
+    padding: 0.75rem;
     flex-grow: 1;
 
     &-title {
@@ -170,13 +205,38 @@ const notation: Notation = "d-slash" as Notation;
     &-body {
         margin-top: 0.3rem;
         color: hsl(var(--text2));
+        border: 1px solid transparent;
+        .oversized {
+            border: 1px solid hsla(var(--subtext0) / 0.1);
+            border-radius: 1rem;
+            overflow: hidden;
+            padding: 0.5rem;
+        }
+        .collapsed {
+            position: relative;
+            overflow: hidden;
+            max-height: 12.8em;
+
+            &::after {
+                content: "";
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 4em;
+                background: linear-gradient(
+                    hsla(var(--surface0) / 0) 0%,
+                    hsla(var(--surface0) / 0.3) 100%
+                );
+            }
+        }
     }
 }
 
 .result__footer {
     display: flex;
     justify-content: flex-end;
-    padding: 0.5rem;
+    padding: 0.75rem;
     font-size: 0.9rem;
     color: hsl(var(--subtext1));
 
@@ -194,6 +254,25 @@ const notation: Notation = "d-slash" as Notation;
                 text-decoration: underline;
             }
         }
+    }
+}
+
+.toggle-btn {
+    border: 1px solid hsla(var(--subtext0) / 0.1);
+    background: transparent;
+    color: hsl(var(--subtext1));
+    border-radius: 5rem;
+    padding: 0.25rem 1rem;
+    cursor: pointer;
+    transition: 0.2s cubic-bezier(0.2, 0, 0, 1);
+
+    &:hover {
+        border-color: hsla(var(--blue) / 0.3);
+        background: hsla(var(--blue) / 0.075);
+    }
+    &:active {
+        border-color: hsla(var(--blue) / 0.5);
+        background: hsla(var(--blue) / 0.15);
     }
 }
 </style>
