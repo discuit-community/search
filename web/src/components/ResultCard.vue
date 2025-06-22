@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import type { SearchResult } from "@/stores/searchStore";
 import { ref, watch, onMounted, nextTick } from "vue";
 import { marked } from "marked";
 
+import type { SearchResult } from "@/stores/searchStore";
+import { useSettingsStore } from "@/stores/settingsStore";
+
+const settingsStore = useSettingsStore();
 const props = defineProps<{
-	result: SearchResult;
-	index: number;
+    result: SearchResult;
+    index: number;
 }>();
 
 const isExpanded = ref(false);
@@ -13,55 +16,54 @@ const isCollapsible = ref(false);
 const bodyRef = ref<HTMLElement | null>(null);
 
 onMounted(async () => {
-	await nextTick();
-	if (bodyRef.value) {
-		const style = window.getComputedStyle(bodyRef.value);
-		const lineHeight =
-			parseFloat(style.lineHeight) === 0 ? 20 : parseFloat(style.lineHeight);
-		const totalHeight = bodyRef.value.offsetHeight;
-		const maxHeight = lineHeight * 8;
+    await nextTick();
+    if (bodyRef.value) {
+        const style = window.getComputedStyle(bodyRef.value);
+        const lineHeight =
+            parseFloat(style.lineHeight) === 0
+                ? 20
+                : parseFloat(style.lineHeight);
+        const totalHeight = bodyRef.value.offsetHeight;
+        const maxHeight = lineHeight * 8;
 
-		isCollapsible.value = totalHeight > maxHeight + 2;
-	}
+        isCollapsible.value = totalHeight > maxHeight + 2;
+    }
 });
 
 const result = props.result;
 
 const date = new Date(result.createdAt).toLocaleDateString(navigator.language, {
-	year: "numeric",
-	month: "2-digit",
-	day: "2-digit",
-	hour: "2-digit",
-	minute: "2-digit",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
 });
 
 function timeAgo(date: Date) {
-	const now = new Date();
-	const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    const now = new Date();
+    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-	const intervals = [
-		{ label: "year", seconds: 31536000 },
-		{ label: "month", seconds: 2592000 },
-		{ label: "day", seconds: 86400 },
-		{ label: "hour", seconds: 3600 },
-		{ label: "minute", seconds: 60 },
-		{ label: "second", seconds: 1 },
-	];
+    const intervals = [
+        { label: "year", seconds: 31536000 },
+        { label: "month", seconds: 2592000 },
+        { label: "day", seconds: 86400 },
+        { label: "hour", seconds: 3600 },
+        { label: "minute", seconds: 60 },
+        { label: "second", seconds: 1 },
+    ];
 
-	for (const interval of intervals) {
-		const count = Math.floor(seconds / interval.seconds);
-		if (count >= 1) {
-			return `${count} ${interval.label}${count > 1 ? "s" : ""} ago`;
-		}
-	}
-	return "just now";
+    for (const interval of intervals) {
+        const count = Math.floor(seconds / interval.seconds);
+        if (count >= 1) {
+            return `${count} ${interval.label}${count > 1 ? "s" : ""} ago`;
+        }
+    }
+    return "just now";
 }
 
 const body = result.body ? marked.parse(result.body) : "";
 const friendlyDate = timeAgo(new Date(result.createdAt));
-
-type Notation = "plus" | "d-slash";
-const notation: Notation = "d-slash" as Notation;
 </script>
 
 <template>
@@ -82,7 +84,7 @@ const notation: Notation = "d-slash" as Notation;
                     target="_blank"
                     rel="noopener noreferrer"
                 >
-                    {{ notation === "plus" ? "+" : "d/"
+                    {{ settingsStore.communityPrefix === "plus" ? "+" : "d/"
                     }}{{ result.communityName }}
                 </a>
             </div>

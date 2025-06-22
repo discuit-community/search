@@ -12,6 +12,9 @@ export const useSettingsStore = defineStore("settings", () => {
 	const instanceUrl = ref<string>(
 		localStorage.getItem("instanceUrl") || "https://dsearch.wlo.moe",
 	);
+	const discuitProxyUrl = ref<string>(
+		localStorage.getItem("proxyUrl") || "https://dproxy.wlo.moe",
+	);
 	const theme = ref<Theme>((localStorage.getItem("theme") as Theme) || "mocha");
 
 	// --- actions ---
@@ -25,6 +28,11 @@ export const useSettingsStore = defineStore("settings", () => {
 		localStorage.setItem("instanceUrl", url);
 	}
 
+	function setDiscuitProxyUrl(url: string) {
+	  discuitProxyUrl.value = url;
+    localStorage.setItem("proxyUrl", url);
+  }
+
 	function setTheme(newTheme: Theme) {
 		theme.value = newTheme;
 		localStorage.setItem("theme", newTheme);
@@ -36,16 +44,21 @@ export const useSettingsStore = defineStore("settings", () => {
 				: `theme-${newTheme}`;
 	}
 
+
+
 	watch(communityPrefix, (val) => localStorage.setItem("communityPrefix", val));
 	watch(instanceUrl, (val) => localStorage.setItem("instanceUrl", val));
 	watch(theme, (val) => localStorage.setItem("theme", val));
+	watch(discuitProxyUrl, (val) => localStorage.setItem("proxyUrl", val));
 
 	return {
 		communityPrefix,
 		instanceUrl,
+		discuitProxyUrl,
 		theme,
 		setCommunityPrefix,
 		setInstanceUrl,
 		setTheme,
+		setDiscuitProxyUrl
 	};
 });

@@ -26,6 +26,11 @@ function handleInstanceUrlChange(e: Event) {
     const target = e.target as HTMLInputElement;
     settings.setInstanceUrl(target.value);
 }
+
+function handleDiscuitProxyUrlChange(e: Event) {
+    const target = e.target as HTMLInputElement;
+    settings.setDiscuitProxyUrl(target.value);
+}
 </script>
 
 <template>
@@ -95,6 +100,25 @@ function handleInstanceUrlChange(e: Event) {
                     autocomplete="off"
                 />
             </section>
+
+            <section>
+                <h2>instance url</h2>
+                <p class="hint">
+                    set the discuit proxy endpoint
+                    <span class="warn"
+                        >(only change this if you know what you're doing)</span
+                    >
+                </p>
+                <input
+                    type="text"
+                    v-model="settings.discuitProxyUrl"
+                    @input="handleDiscuitProxyUrlChange"
+                    class="proxy-url-input"
+                    spellcheck="false"
+                    autocapitalize="off"
+                    autocomplete="off"
+                />
+            </section>
         </div>
     </PageView>
 </template>
@@ -103,6 +127,7 @@ function handleInstanceUrlChange(e: Event) {
 .settings-content {
     max-width: 568px;
     margin: 0 auto 0 auto;
+    padding: 0.3rem;
     color: hsl(var(--subtext1));
     font-size: 1.05em;
     line-height: 1.7;
@@ -205,22 +230,22 @@ section {
         font-size: 0.98em;
         color: hsl(var(--text));
     }
+}
 
-    .instance-url-input {
-        width: 100%;
-        padding: 0.5rem 1rem;
-        border-radius: 0.5rem;
-        border: 1px solid hsla(var(--subtext0) / 0.2);
-        background: hsla(var(--surface0) / 0.5);
-        color: hsl(var(--text));
-        font-size: 1em;
-        margin-top: 0.5rem;
-        transition: border-color 0.2s cubic-bezier(0.2, 0, 0, 1);
+input[type="text"] {
+    width: 100%;
+    padding: 0.5rem 1rem;
+    border-radius: 5rem;
+    border: 1px solid hsla(var(--subtext0) / 0.2);
+    background: hsla(var(--surface0) / 0.5);
+    color: hsl(var(--text));
+    font-size: 1em;
+    margin-top: 0.5rem;
+    transition: border-color 0.2s cubic-bezier(0.2, 0, 0, 1);
 
-        &:focus {
-            outline: none;
-            border-color: hsl(var(--blue));
-        }
+    &:focus {
+        outline: none;
+        border-color: hsl(var(--blue));
     }
 }
 
