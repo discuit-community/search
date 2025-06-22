@@ -10,28 +10,28 @@ const router = useRouter();
 const searchStore = useSearchStore();
 
 onMounted(() => {
-	searchStore.query = (route.query.q as string) || "";
-	searchStore.page = Number(route.query.page) || 1;
-	searchStore.search();
+    searchStore.query = (route.query.q as string) || "";
+    searchStore.page = Number(route.query.page) || 1;
+    searchStore.search();
 });
 
 watch(
-	() => [searchStore.query, searchStore.page],
-	() => {
-		router.replace({
-			path: "/search",
-			query: { q: searchStore.query, page: searchStore.page },
-		});
-		searchStore.search();
-	},
+    () => [searchStore.query, searchStore.page],
+    () => {
+        router.replace({
+            path: "/search",
+            query: { q: searchStore.query, page: searchStore.page },
+        });
+        searchStore.search();
+    },
 );
 
 watch(
-	() => route.query,
-	(newQuery) => {
-		searchStore.query = (newQuery.q as string) || "";
-		searchStore.page = Number(newQuery.page) || 1;
-	},
+    () => route.query,
+    (newQuery) => {
+        searchStore.query = (newQuery.q as string) || "";
+        searchStore.page = Number(newQuery.page) || 1;
+    },
 );
 </script>
 
@@ -53,6 +53,7 @@ watch(
 
         <div
             class="results-view"
+            v-dynamic-radius
             :class="{ loading: searchStore.fetchingResults }"
         >
             <div class="results-container">
@@ -200,6 +201,11 @@ header {
             }
         }
     }
+}
+
+.results-view {
+    overflow-y: auto;
+    max-height: 100%;
 }
 
 .pagination {
