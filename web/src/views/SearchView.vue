@@ -204,6 +204,7 @@ header {
 }
 
 .results-view {
+    padding: 0.3rem;
     overflow-y: auto;
     max-height: 100%;
 }

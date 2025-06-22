@@ -76,7 +76,6 @@ const noFooter = slots.footer === undefined;
         .scroll-container {
             flex: 1;
             overflow-y: auto;
-            padding: 0.3rem;
             box-sizing: border-box;
 
             &::-webkit-scrollbar {
