@@ -53,13 +53,6 @@ import PageView from "@/components/PageView.vue";
 </template>
 
 <style scoped>
-h1 {
-    font-weight: 600;
-    color: hsl(var(--mauve));
-    margin-bottom: 0.5rem;
-    text-align: center;
-}
-
 .privacy-content {
     max-width: 568px;
     margin: 0 auto 0 auto;

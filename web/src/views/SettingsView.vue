@@ -1,30 +1,30 @@
 <script setup lang="ts">
 import PageView from "@/components/PageView.vue";
 import {
-	useSettingsStore,
-	type Theme,
-	type CommunityPrefix,
+    useSettingsStore,
+    type Theme,
+    type CommunityPrefix,
 } from "@/stores/settingsStore";
 
 const settings = useSettingsStore();
 
 const themes: Theme[] = ["latte", "frappe", "macchiato", "mocha", "system"];
 const communityPrefixes: { label: string; value: CommunityPrefix }[] = [
-	{ label: "d/", value: "slash" },
-	{ label: "+", value: "plus" },
+    { label: "d/", value: "slash" },
+    { label: "+", value: "plus" },
 ];
 
 function handleThemeChange(theme: Theme) {
-	settings.setTheme(theme);
+    settings.setTheme(theme);
 }
 
 function handlePrefixChange(prefix: CommunityPrefix) {
-	settings.setCommunityPrefix(prefix);
+    settings.setCommunityPrefix(prefix);
 }
 
 function handleInstanceUrlChange(e: Event) {
-	const target = e.target as HTMLInputElement;
-	settings.setInstanceUrl(target.value);
+    const target = e.target as HTMLInputElement;
+    settings.setInstanceUrl(target.value);
 }
 </script>
 
@@ -222,11 +222,6 @@ section {
             border-color: hsl(var(--blue));
         }
     }
-}
-
-h1 {
-    font-weight: 700;
-    color: hsl(var(--mauve));
 }
 
 input[type="radio"] {

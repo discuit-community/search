@@ -8,16 +8,15 @@
 </template>
 
 <style lang="scss" scoped>
-.nav,
-.footer {
+.nav {
     max-width: 568px;
     width: 100%;
     background: hsla(var(--mantle) / 1);
     border: 1px solid hsla(var(--subtext0) / 0.1);
-    min-height: 5rem;
-    padding: 0.75rem;
-    border-radius: 3rem;
-    margin: 1rem auto 0 auto;
+    height: 5rem;
+    padding: 0.3rem;
+    border-radius: 50rem;
+    margin: 0 auto;
 }
 
 .nav {
@@ -25,8 +24,7 @@
     flex-direction: row;
     justify-content: center;
     align-items: stretch;
-    gap: 0.5rem;
-    padding: 0.5rem;
+    gap: 0.3rem;
     overflow-x: auto;
 
     a {

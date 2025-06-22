@@ -22,11 +22,10 @@ const noFooter = slots.footer === undefined;
         <div class="footer" v-if="!noFooter">
             <slot name="footer"></slot>
         </div>
-        <div class="footer" v-else>
+        <!-- <div class="footer" v-else>
             <NavigationRow />
-        </div>
+        </div> -->
     </div>
-    <FooterSection :showNavLinks="!noFooter" />
 </template>
 
 <style scoped>
@@ -38,8 +37,7 @@ const noFooter = slots.footer === undefined;
         "header"
         "main"
         "footer";
-    height: 100dvh;
-
+    height: calc(100dvh - 5rem - 1rem);
     &.no-footer {
         grid-template-rows: auto 1fr;
         grid-template-areas:
