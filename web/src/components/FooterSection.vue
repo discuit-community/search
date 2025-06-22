@@ -1,13 +1,18 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from "vue";
+import NavigationRow from "./NavigationRow.vue";
 
 type Theme = (typeof themes)[number] | "system";
 const themes = ["latte", "frappe", "macchiato", "mocha"] as const;
 const currentTheme = ref<Theme>("mocha");
 
+defineProps<{
+	showNavLinks?: boolean;
+}>();
+
 const links = ref([
 	{ name: "github", url: "https://github.com/discuit-community/search" },
-	{ name: "privacy", url: "/privacy", isExternal: false },
+	{ name: "privacy", url: "/privacy", isInternal: true },
 	{ name: "api docs", url: "/swagger" },
 ]);
 
@@ -71,6 +76,8 @@ onUnmounted(() => {
 </script>
 
 <template>
+    <NavigationRow v-if="showNavLinks" />
+
     <footer class="footer">
         <div class="footer-text">
             <h2>discuit search</h2>
@@ -84,9 +91,9 @@ onUnmounted(() => {
         <div class="footer-links">
             <template v-for="link in links" :key="link.name">
                 <a
-                    v-if="link.isExternal"
+                    v-if="!link.isInternal"
                     :href="link.url"
-                    :target="link.isExternal ? '_blank' : '_self'"
+                    :target="link.isInternal ? '_self' : '_blank'"
                     rel="noopener noreferrer"
                 >
                     {{ link.name }}
@@ -94,7 +101,7 @@ onUnmounted(() => {
                 <router-link
                     v-else
                     :to="link.url"
-                    :class="{ 'is-external': link.isExternal }"
+                    :class="{ 'is-external': !link.isInternal }"
                 >
                     {{ link.name }}
                 </router-link>
@@ -128,19 +135,74 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+.nav,
 .footer {
     max-width: 568px;
     width: 100%;
     background: hsla(var(--mantle) / 1);
     border: 1px solid hsla(var(--subtext0) / 0.1);
-    border-bottom: none;
-    border-radius: 3rem 3rem 0 0;
     min-height: 5rem;
     padding: 0.75rem;
-    margin: 5rem auto 0 auto;
+    border-radius: 3rem;
+    margin: 1rem auto 0 auto;
+}
 
+.nav {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: stretch;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    overflow-x: auto;
+
+    a {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1em;
+        font-weight: 600;
+        width: 9rem;
+
+        background: hsla(var(--mantle) / 0.8);
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+        border: 1px solid hsla(var(--subtext0) / 0.1);
+        color: hsl(var(--subtext1));
+        text-decoration: none;
+        transition: 0.2s cubic-bezier(0.2, 0, 0, 1);
+
+        &:hover {
+            background: hsla(var(--surface0) / 0.9);
+            border-color: hsla(var(--blue) / 0.2);
+            color: hsl(var(--blue));
+        }
+
+        &:active {
+            background: hsla(var(--surface0) / 0.75);
+            border-color: hsla(var(--blue) / 0.3);
+            color: hsl(var(--blue));
+        }
+
+        &.router-link-exact-active {
+            background: hsla(var(--blue) / 0.12);
+            border-color: hsla(var(--blue) / 0.5);
+            color: hsl(var(--blue));
+            &:hover {
+                background: hsla(var(--blue) / 0.15);
+            }
+            &:active {
+                background: hsla(var(--blue) / 0.08);
+            }
+        }
+    }
+}
+
+.footer {
     display: flex;
     flex-direction: column;
+    border-radius: 3rem 3rem 0 0;
+    border-bottom: none;
 
     color: hsl(var(--subtext1));
     gap: 1rem;
@@ -162,9 +224,10 @@ onUnmounted(() => {
     padding-bottom: 1rem;
     border-bottom: 1px solid hsla(var(--subtext0) / 0.1);
     h2 {
-        font-size: 2em;
+        font-size: 2.25em;
         color: hsl(var(--text));
-        margin-bottom: 0.5rem;
+        margin-bottom: 0;
+        font-weight: 900;
     }
 }
 

@@ -16,14 +16,16 @@ function updateItemRadii(container: HTMLElement) {
 
 		let topRadius = minRadius;
 		if (distanceTop >= 0 && distanceTop <= maxDistance) {
-			topRadius = maxRadius - (maxRadius - minRadius) * (distanceTop / maxDistance);
+			topRadius =
+				maxRadius - (maxRadius - minRadius) * (distanceTop / maxDistance);
 		} else if (distanceTop < 0) {
 			topRadius = maxRadius;
 		}
 
 		let bottomRadius = minRadius;
 		if (distanceBottom >= 0 && distanceBottom <= maxDistance) {
-			bottomRadius = maxRadius - (maxRadius - minRadius) * (distanceBottom / maxDistance);
+			bottomRadius =
+				maxRadius - (maxRadius - minRadius) * (distanceBottom / maxDistance);
 		} else if (distanceBottom < 0) {
 			bottomRadius = maxRadius;
 		}
