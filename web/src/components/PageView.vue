@@ -1,7 +1,5 @@
 <script setup>
 import { useSlots } from "vue";
-import FooterSection from "./FooterSection.vue";
-import NavigationRow from "./NavigationRow.vue";
 
 const slots = useSlots();
 const noFooter = slots.footer === undefined;
@@ -22,9 +20,6 @@ const noFooter = slots.footer === undefined;
         <div class="footer" v-if="!noFooter">
             <slot name="footer"></slot>
         </div>
-        <!-- <div class="footer" v-else>
-            <NavigationRow />
-        </div> -->
     </div>
 </template>
 

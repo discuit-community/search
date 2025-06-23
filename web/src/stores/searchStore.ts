@@ -1,4 +1,3 @@
-import { PostModel } from "@discuit-community/client";
 import { defineStore } from "pinia";
 
 type SqlBoolean = 0 | 1;

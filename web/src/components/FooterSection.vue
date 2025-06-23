@@ -7,9 +7,9 @@ const themes = ["latte", "frappe", "macchiato", "mocha"] as const;
 const currentTheme = ref<Theme>("mocha");
 
 const links = ref([
-    { name: "github", url: "https://github.com/discuit-community/search" },
-    { name: "privacy", url: "/privacy", isInternal: true },
-    { name: "api docs", url: "/swagger" },
+	{ name: "github", url: "https://github.com/discuit-community/search" },
+	{ name: "privacy", url: "/privacy", isInternal: true },
+	{ name: "api docs", url: "/swagger" },
 ]);
 </script>
 
@@ -43,30 +43,6 @@ const links = ref([
                     {{ link.name }}
                 </router-link>
             </template>
-        </div>
-
-        <div class="footer-themes">
-            <h3>themes</h3>
-            <p>
-                using <a href="https://catppuccin.com/">catppuccin</a>! a
-                soothing pastel theme for the high-spirited.
-            </p>
-            <div class="themes-row">
-                <button
-                    v-for="theme in themes"
-                    :key="theme"
-                    :class="{ active: currentTheme === theme }"
-                    @click="setTheme(theme)"
-                >
-                    <span>{{ theme }}</span>
-                </button>
-                <button
-                    :class="{ active: currentTheme === 'system' }"
-                    @click="setTheme('system')"
-                >
-                    <span>system</span>
-                </button>
-            </div>
         </div>
     </footer>
 </template>
@@ -150,12 +126,6 @@ const links = ref([
                 color: hsl(var(--blue));
             }
         }
-    }
-
-    .themes-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
     }
 
     button {

@@ -29,9 +29,9 @@ export const useSettingsStore = defineStore("settings", () => {
 	}
 
 	function setDiscuitProxyUrl(url: string) {
-	  discuitProxyUrl.value = url;
-    localStorage.setItem("proxyUrl", url);
-  }
+		discuitProxyUrl.value = url;
+		localStorage.setItem("proxyUrl", url);
+	}
 
 	function setTheme(newTheme: Theme) {
 		theme.value = newTheme;
@@ -43,8 +43,6 @@ export const useSettingsStore = defineStore("settings", () => {
 					: "theme-latte"
 				: `theme-${newTheme}`;
 	}
-
-
 
 	watch(communityPrefix, (val) => localStorage.setItem("communityPrefix", val));
 	watch(instanceUrl, (val) => localStorage.setItem("instanceUrl", val));
@@ -59,6 +57,6 @@ export const useSettingsStore = defineStore("settings", () => {
 		setCommunityPrefix,
 		setInstanceUrl,
 		setTheme,
-		setDiscuitProxyUrl
+		setDiscuitProxyUrl,
 	};
 });

@@ -1,5 +1,3 @@
-import type { DirectiveBinding } from "vue";
-
 function updateItemRadii(container: HTMLElement) {
 	const items = container.querySelectorAll<HTMLElement>(".result");
 	const containerRect = container.getBoundingClientRect();
@@ -56,7 +54,8 @@ export default {
 			window.removeEventListener("resize", update);
 		}
 		el.__dynamicRadiusObserver__?.disconnect();
-		delete el.__dynamicRadiusUpdate__;
-		delete el.__dynamicRadiusObserver__;
+
+		el.__dynamicRadiusUpdate__ = undefined;
+		el.__dynamicRadiusObserver__ = undefined;
 	},
 };
