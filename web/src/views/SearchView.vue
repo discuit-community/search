@@ -1,38 +1,147 @@
 <script lang="ts" setup>
-import { onMounted, watch } from "vue";
+import { ref, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useSearchStore } from "../stores/searchStore";
 import PageView from "@/components/PageView.vue";
 import ResultCard from "@/components/ResultCard.vue";
+import FilterModal, { type FilterOptions } from "@/components/FilterModal.vue";
 
 const route = useRoute();
 const router = useRouter();
 const searchStore = useSearchStore();
 
+const showFilterModal = ref(false);
+
 onMounted(() => {
-	searchStore.query = (route.query.q as string) || "";
-	searchStore.page = Number(route.query.page) || 1;
-	searchStore.search();
+    searchStore.query = (route.query.q as string) || "";
+    searchStore.page = Number(route.query.page) || 1;
+
+    const filters: FilterOptions = {};
+    if (route.query.community)
+        filters.community = route.query.community as string;
+    if (route.query.username) filters.username = route.query.username as string;
+    if (route.query.type)
+        filters.postType = route.query.type as FilterOptions["postType"];
+    if (route.query.sort) {
+        const sortParam = route.query.sort as string;
+        switch (sortParam) {
+            case "createdAt:desc":
+                filters.sortBy = "newest";
+                break;
+            case "createdAt:asc":
+                filters.sortBy = "oldest";
+                break;
+            case "upvotes:desc":
+                filters.sortBy = "most-upvoted";
+                break;
+            case "upvotes:asc":
+                filters.sortBy = "least-upvoted";
+                break;
+            default:
+                filters.sortBy = "relevance";
+        }
+    }
+    searchStore.filters = filters;
+
+    searchStore.search();
 });
 
 watch(
-	() => [searchStore.query, searchStore.page],
-	() => {
-		router.replace({
-			path: "/search",
-			query: { q: searchStore.query, page: searchStore.page },
-		});
-		searchStore.search();
-	},
+    () => [searchStore.query, searchStore.page, searchStore.filters],
+    () => {
+        const query: Record<string, string> = {
+            q: searchStore.query,
+            page: searchStore.page.toString(),
+        };
+
+        if (searchStore.filters.community) {
+            query.community = searchStore.filters.community;
+        }
+        if (searchStore.filters.username) {
+            query.username = searchStore.filters.username;
+        }
+        if (
+            searchStore.filters.postType &&
+            searchStore.filters.postType !== "all"
+        ) {
+            query.type = searchStore.filters.postType;
+        }
+        if (
+            searchStore.filters.sortBy &&
+            searchStore.filters.sortBy !== "relevance"
+        ) {
+            switch (searchStore.filters.sortBy) {
+                case "newest":
+                    query.sort = "createdAt:desc";
+                    break;
+                case "oldest":
+                    query.sort = "createdAt:asc";
+                    break;
+                case "most-upvoted":
+                    query.sort = "upvotes:desc";
+                    break;
+                case "least-upvoted":
+                    query.sort = "upvotes:asc";
+                    break;
+            }
+        }
+
+        router.replace({
+            path: "/search",
+            query,
+        });
+        searchStore.search();
+    },
+    { deep: true },
 );
 
 watch(
-	() => route.query,
-	(newQuery) => {
-		searchStore.query = (newQuery.q as string) || "";
-		searchStore.page = Number(newQuery.page) || 1;
-	},
+    () => route.query,
+    (newQuery) => {
+        searchStore.query = (newQuery.q as string) || "";
+        searchStore.page = Number(newQuery.page) || 1;
+
+        const filters: FilterOptions = {};
+        if (newQuery.community)
+            filters.community = newQuery.community as string;
+        if (newQuery.username) filters.username = newQuery.username as string;
+        if (newQuery.type)
+            filters.postType = newQuery.type as FilterOptions["postType"];
+        if (newQuery.sort) {
+            const sortParam = newQuery.sort as string;
+            switch (sortParam) {
+                case "createdAt:desc":
+                    filters.sortBy = "newest";
+                    break;
+                case "createdAt:asc":
+                    filters.sortBy = "oldest";
+                    break;
+                case "upvotes:desc":
+                    filters.sortBy = "most-upvoted";
+                    break;
+                case "upvotes:asc":
+                    filters.sortBy = "least-upvoted";
+                    break;
+                default:
+                    filters.sortBy = "relevance";
+            }
+        }
+
+        searchStore.filters = filters;
+    },
 );
+
+function openFilterModal() {
+    showFilterModal.value = true;
+}
+
+function closeFilterModal() {
+    showFilterModal.value = false;
+}
+
+function applyFilters(filters: FilterOptions) {
+    searchStore.setFilters(filters);
+}
 </script>
 
 <template>
@@ -47,6 +156,32 @@ watch(
                         @input="searchStore.page = 1"
                         class="search-input"
                     />
+                    <button
+                        class="filter-btn"
+                        @click="openFilterModal"
+                        :class="{ active: searchStore.hasActiveFilters }"
+                        title="Open filters"
+                        aria-label="Open filter options"
+                    >
+                        <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <polygon
+                                points="22,3 2,3 10,12.46 10,19 14,21 14,12.46 22,3"
+                            ></polygon>
+                        </svg>
+                        <span
+                            v-if="searchStore.hasActiveFilters"
+                            class="filter-indicator"
+                        ></span>
+                    </button>
                 </div>
             </header>
         </template>
@@ -129,6 +264,13 @@ watch(
             </div>
         </template>
     </PageView>
+    <teleport to="body">
+        <FilterModal
+            :open="showFilterModal"
+            @close="closeFilterModal"
+            @applyFilters="applyFilters"
+        />
+    </teleport>
 </template>
 
 <style scoped>
@@ -136,7 +278,9 @@ header {
     .header-input {
         display: flex;
         justify-content: center;
-        gap: 0.1rem;
+        align-items: center;
+        width: 100%;
+        gap: 0.5rem;
 
         input {
             flex: 1;
@@ -165,39 +309,55 @@ header {
                 background: hsla(var(--surface0) / 1);
             }
         }
-    }
 
-    .header-row {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        margin-top: 0.5rem;
-
-        button {
-            padding: 0.25rem 0.5rem;
-            border: none;
-            border-radius: 5rem;
-            font-size: 1.1rem;
-            background: hsla(var(--mantle) / 1);
-            color: hsl(var(--subtext0));
+        .filter-btn {
+            position: relative;
+            aspect-ratio: 1 / 1;
+            padding: 1rem;
+            border-radius: 50%;
             border: 1px solid hsla(var(--subtext0) / 0.1);
+            background: hsla(var(--mantle) / 1);
+            color: hsl(var(--subtext1));
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             transition: 0.2s cubic-bezier(0.2, 0, 0, 1);
 
             &:hover {
                 border-color: hsla(var(--blue) / 0.2);
                 background: hsla(var(--surface0) / 0.9);
+                color: hsl(var(--blue));
             }
 
             &:focus-visible {
                 outline: none;
                 border-color: hsla(var(--blue) / 0.5);
                 background: hsla(var(--surface0) / 0.9);
+                color: hsl(var(--blue));
             }
 
             &:active {
                 border-color: hsla(var(--blue) / 0.3);
                 background: hsla(var(--surface0) / 1);
+                transform: scale(0.95);
+            }
+
+            &.active {
+                border-color: hsla(var(--blue) / 0.5);
+                background: hsla(var(--blue) / 0.1);
+                color: hsl(var(--blue));
+
+                .filter-indicator {
+                    position: absolute;
+                    top: 0.3rem;
+                    right: 0.3rem;
+                    width: 0.5rem;
+                    height: 0.5rem;
+                    background: hsl(var(--blue));
+                    border-radius: 50%;
+                    border: 2px solid hsl(var(--base));
+                }
             }
         }
     }

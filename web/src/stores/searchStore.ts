@@ -23,6 +23,13 @@ export type SearchResult = Post & {
 	_formatted: Post;
 };
 
+export interface FilterOptions {
+	community?: string;
+	username?: string;
+	postType?: "all" | "text" | "image" | "link";
+	sortBy?: "relevance" | "newest" | "oldest" | "most-upvoted" | "least-upvoted";
+}
+
 export const useSearchStore = defineStore("search", {
 	state: () => ({
 		query: "" as string,
@@ -31,6 +38,7 @@ export const useSearchStore = defineStore("search", {
 		page: 1,
 		limit: 20,
 		totalHits: 0,
+		filters: {} as FilterOptions,
 	}),
 	actions: {
 		async search() {
@@ -42,10 +50,41 @@ export const useSearchStore = defineStore("search", {
 			}
 			this.fetchingResults = true;
 			const offset = (this.page - 1) * this.limit;
+
+			const url = new URL(`${settingsStore.instanceUrl}/search`);
+			url.searchParams.set("q", this.query);
+			url.searchParams.set("limit", this.limit.toString());
+			url.searchParams.set("offset", offset.toString());
+
+			if (this.filters.community) {
+				url.searchParams.set("community", this.filters.community);
+			}
+			if (this.filters.username) {
+				url.searchParams.set("username", this.filters.username);
+			}
+			if (this.filters.postType && this.filters.postType !== "all") {
+				url.searchParams.set("type", this.filters.postType);
+			}
+
+			if (this.filters.sortBy && this.filters.sortBy !== "relevance") {
+				switch (this.filters.sortBy) {
+					case "newest":
+						url.searchParams.set("sort", "createdAt:desc");
+						break;
+					case "oldest":
+						url.searchParams.set("sort", "createdAt:asc");
+						break;
+					case "most-upvoted":
+						url.searchParams.set("sort", "upvotes:desc");
+						break;
+					case "least-upvoted":
+						url.searchParams.set("sort", "upvotes:asc");
+						break;
+				}
+			}
+
 			try {
-				const res = await fetch(
-					`${settingsStore.instanceUrl}/search?q=${encodeURIComponent(this.query)}&limit=${this.limit}&offset=${offset}`,
-				);
+				const res = await fetch(url.toString());
 				const data = await res.json();
 				this.results = data.hits || [];
 				this.totalHits = data.estimatedTotalHits || 0;
@@ -62,6 +101,21 @@ export const useSearchStore = defineStore("search", {
 		},
 		setPage(p: number) {
 			this.page = p;
+		},
+		setFilters(filters: FilterOptions) {
+			this.filters = filters;
+			this.page = 1;
+		},
+		clearFilters() {
+			this.filters = {};
+			this.page = 1;
+		},
+	},
+	getters: {
+		hasActiveFilters(): boolean {
+			return Object.values(this.filters).some(
+				(value) => value && value !== "all" && value !== "relevance",
+			);
 		},
 	},
 });
