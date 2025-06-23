@@ -11,6 +11,47 @@ const client = new DiscuitClient({
 	apiUrl: ENV.DISCUIT.API_URL,
 });
 
+const postProperties: (keyof Post)[] = [
+	"id",
+	"type",
+	"publicId",
+	"userId",
+	"username",
+	"userGhostId",
+	"userGroup",
+	"userDeleted",
+	"isPinned",
+	"isPinnedSite",
+	"communityId",
+	"communityName",
+	"communityProPic",
+	"communityBannerImage",
+	"title",
+	"body",
+	"image",
+	"images",
+	"link",
+	"locked",
+	"lockedBy",
+	"lockedByGroup",
+	"lockedAt",
+	"upvotes",
+	"downvotes",
+	"hotness",
+	"createdAt",
+	"editedAt",
+	"lastActivityAt",
+	"deleted",
+	"deletedAt",
+	"deletedBy",
+	"deletedAs",
+	"deletedContent",
+	"deletedContentAs",
+	"noComments",
+	"comments",
+	"commentsNext",
+];
+
 function formatSize(bytes: number): string {
 	if (bytes < 1024) return `${bytes} bytes`;
 	if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} kb`;
@@ -20,20 +61,12 @@ function formatSize(bytes: number): string {
 }
 
 function postsAreEqual(a: Post, b: Post): boolean {
-	return (
-		a.title === b.title &&
-		a.body === b.body &&
-		a.communityName === b.communityName &&
-		a.username === b.username &&
-		a.type === b.type &&
-		a.createdAt === b.createdAt &&
-		a.hotness === b.hotness &&
-		a.upvotes === b.upvotes &&
-		a.downvotes === b.downvotes &&
-		a.isPinned === b.isPinned &&
-		a.deleted === b.deleted &&
-		a.publicId === b.publicId
-	);
+	for (const prop of postProperties) {
+		if (a[prop] !== b[prop]) {
+			return false;
+		}
+	}
+	return true;
 }
 
 function* batch<T>(arr: T[], size: number): Generator<T[]> {
@@ -44,10 +77,8 @@ function* batch<T>(arr: T[], size: number): Generator<T[]> {
 
 export async function syncIndexWithDatabase() {
 	console.log("syncing index with database...");
-
 	const dbStart = Date.now();
 	const dbPosts = db.query("select * from posts").all() as Post[];
-	const dbPostsById = new Map(dbPosts.map((post) => [post.id, post]));
 
 	const dbEnd = Date.now();
 	const dbDuration = Math.round(dbEnd - dbStart);
@@ -64,21 +95,7 @@ export async function syncIndexWithDatabase() {
 		const res = await postsIndex.getDocuments<Post>({
 			limit,
 			offset,
-			fields: [
-				"id",
-				"publicId",
-				"createdAt",
-				"title",
-				"body",
-				"communityName",
-				"username",
-				"type",
-				"hotness",
-				"upvotes",
-				"downvotes",
-				"isPinned",
-				"deleted",
-			],
+			fields: postProperties,
 		});
 
 		const batchSize = new TextEncoder().encode(
@@ -110,6 +127,10 @@ export async function syncIndexWithDatabase() {
 	const toDelete = msPosts
 		.filter((post) => !dbIds.has(post.id))
 		.map((post) => post.id);
+
+	console.log(
+		`  to add ${toAdd.length} posts, to delete ${toDelete.length} posts.`,
+	);
 
 	const toUpdate: Post[] = [];
 	for (const post of dbPosts) {
@@ -176,10 +197,16 @@ export async function syncIndexWithDatabase() {
 			toAdd,
 			batchSize,
 			async (batchItems) => {
-				const response = await postsIndex.addDocuments(batchItems);
-				await searchClient.tasks.waitForTask(response.taskUid, {
+				const response = await postsIndex.addDocuments(batchItems, {
+					primaryKey: "id",
+				});
+
+				const result = await searchClient.tasks.waitForTask(response.taskUid, {
 					timeout: TIMEOUT,
 				});
+
+				if (result.error)
+					console.error(`error adding documents: ${result.error.message}`);
 			},
 			{ present: "adding", past: "added" },
 		);
@@ -217,25 +244,19 @@ export async function syncIndexWithDatabase() {
 
 export function savePosts(posts: PostModel[]): PostModel[] {
 	const stmt = db.prepare(
-		"insert or ignore into posts (publicId, title, body, createdAt, communityName, username, type, hotness, upvotes, downvotes, isPinned, deleted) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		`insert or ignore into posts (${postProperties.join(", ")}) values (${postProperties.map(() => "?").join(", ")})`,
 	);
 	const inserted: PostModel[] = [];
 	db.transaction(() => {
 		for (const p of posts) {
-			const res = stmt.run(
-				p.raw.publicId,
-				p.raw.title,
-				p.raw.body,
-				p.raw.createdAt,
-				p.raw.communityName,
-				p.raw.username,
-				p.raw.type,
-				p.raw.hotness,
-				p.raw.upvotes,
-				p.raw.downvotes,
-				p.raw.isPinned,
-				p.raw.deleted,
-			);
+			const values = postProperties.map((prop) => {
+				const value = p.raw[prop];
+				if (value === undefined || value === null) return null;
+				if (typeof value === "object") return JSON.stringify(value);
+				return value;
+			});
+			const res = stmt.run(...values);
+
 			if (res.changes === 1) inserted.push(p);
 		}
 	})();

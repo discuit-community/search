@@ -10,30 +10,55 @@ const db = new Database("posts.db");
 
 db.run(`
   create table if not exists posts (
-    publicId text primary key,
-    createdAt text not null,
-
-    title text not null,
-    body text,
-    communityName text not null,
-    username text not null,
+    id text,
     type text,
-
-    hotness real,
+    publicId text primary key,
+    userId text,
+    username text,
+    userGhostId text,
+    userGroup text,
+    userDeleted boolean,
+    isPinned boolean,
+    isPinnedSite boolean,
+    communityId text,
+    communityName text,
+    communityProPic text,
+    communityBannerImage text,
+    title text,
+    body text,
+    image text,
+    images text,
+    link text,
+    locked boolean,
+    lockedBy text,
+    lockedByGroup text,
+    lockedAt text,
     upvotes integer,
     downvotes integer,
-
-    isPinned boolean,
-    deleted boolean
-  )`);
+    hotness real,
+    createdAt text,
+    editedAt text,
+    lastActivityAt text,
+    deleted boolean,
+    deletedAt text,
+    deletedBy text,
+    deletedAs text,
+    deletedContent boolean,
+    deletedContentAs text,
+    noComments integer,
+    comments text,
+    commentsNext text
+  )
+`);
 
 async function fetchAllPosts() {
 	const posts: PostModel[] = [];
-	const startKey: string | undefined = "1769555499bbc51b0f7f1417";
+	// 1769555499bbc51b0f7f1417
+	const startKey: string | undefined = "";
 	let next: string | undefined = startKey;
 	let total = 0;
 	let batch = 0;
-	const MAX_POSTS = 50000;
+	const MAX_POSTS = 150000;
 
 	const before = (
 		db.prepare("select count(*) as count from posts").get() as { count: number }
@@ -44,7 +69,7 @@ async function fetchAllPosts() {
 		console.log(
 			`fetching batch ${batch}... (total: ${total}; next: ${next ?? "none"})`,
 		);
-		const url = new URL("https://discuit.org/api/posts");
+		const url = new URL("https://discuit.org/api/posts?");
 		url.searchParams.set("feed", "all");
 		url.searchParams.set("sort", "hot");
 		url.searchParams.set("limit", "50");
@@ -64,6 +89,7 @@ async function fetchAllPosts() {
 
 		total += getPostsData.posts.length;
 		next = getPostsData.next;
+
 		posts.push(...getPostsData.posts);
 
 		savePosts(getPostsData.posts);

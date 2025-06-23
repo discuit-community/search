@@ -12,7 +12,8 @@ export const searchClient = new Meilisearch({
 export const postsIndex = searchClient.index("posts");
 postsIndex.updateSettings({
 	filterableAttributes: ["communityName", "username", "type"],
-	sortableAttributes: ["createdAt"],
+	sortableAttributes: ["createdAt", "upvotes", "downvotes", "hotness"],
+	searchableAttributes: ["title", "body", "communityName", "username"],
 	faceting: {
 		maxValuesPerFacet: 100,
 		sortFacetValuesBy: { communityName: "count" },
