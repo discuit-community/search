@@ -1,4 +1,5 @@
 import { defineStore } from "pinia";
+import { useSettingsStore } from "./settingsStore";
 
 type SqlBoolean = 0 | 1;
 export interface Post {
@@ -30,11 +31,10 @@ export const useSearchStore = defineStore("search", {
 		page: 1,
 		limit: 20,
 		totalHits: 0,
-
-		instanceUrl: "https://dsearch.wlo.moe",
 	}),
 	actions: {
 		async search() {
+			const settingsStore = useSettingsStore();
 			if (!this.query.trim()) {
 				this.results = [];
 				this.totalHits = 0;
@@ -44,7 +44,7 @@ export const useSearchStore = defineStore("search", {
 			const offset = (this.page - 1) * this.limit;
 			try {
 				const res = await fetch(
-					`${this.instanceUrl}/search?q=${encodeURIComponent(this.query)}&limit=${this.limit}&offset=${offset}`,
+					`${settingsStore.instanceUrl}/search?q=${encodeURIComponent(this.query)}&limit=${this.limit}&offset=${offset}`,
 				);
 				const data = await res.json();
 				this.results = data.hits || [];
