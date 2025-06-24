@@ -2,10 +2,13 @@ import type { Post } from "@discuit-community/types";
 import { Jetstream, Topic } from "@discuit-community/jetstream";
 import DiscuitClient, { PostModel } from "@discuit-community/client";
 
+import logger from "./logger";
 import { db } from "./db";
 import { postsIndex, searchClient } from "./meilisearch";
 import ENV from "./env";
 const TIMEOUT = ENV.SEARCH.TIMEOUT;
+
+const loggerSync = logger.child("sync");
 
 const client = new DiscuitClient({
 	apiUrl: ENV.DISCUIT.API_URL,
@@ -76,13 +79,13 @@ function* batch<T>(arr: T[], size: number): Generator<T[]> {
 }
 
 export async function syncIndexWithDatabase() {
-	console.log("syncing index with database...");
+	loggerSync.info("syncing index with database...");
 	const dbStart = Date.now();
 	const dbPosts = db.query("select * from posts").all() as Post[];
 
 	const dbEnd = Date.now();
 	const dbDuration = Math.round(dbEnd - dbStart);
-	console.log(
+	loggerSync.info(
 		`  found ${dbPosts.length} posts in database in ${dbDuration}ms.`,
 	);
 
@@ -106,17 +109,15 @@ export async function syncIndexWithDatabase() {
 
 		if (res.results.length < limit) break;
 		offset += limit;
-		process.stdout.clearLine(0);
-		process.stdout.write(
-			`\r  fetched ${msPosts.length} posts from index so far (~${formatSize(batchSize)})...`,
+		logger.info(
+			`  fetched ${msPosts.length} posts from index so far (~${formatSize(batchSize)})...`,
 		);
 	}
-	process.stdout.clearLine(0);
 
 	const msEnd = Date.now();
 	const msDuration = Math.round(msEnd - msStart);
-	process.stdout.write(
-		`\r  found ${msPosts.length} posts in index in ${msDuration}ms (approx. ${formatSize(size)})\n`,
+	logger.info(
+		`  found ${msPosts.length} posts in index in ${msDuration}ms (approx. ${formatSize(size)})\n`,
 	);
 
 	const msPostsById = new Map(msPosts.map((post) => [post.id, post]));
@@ -128,7 +129,7 @@ export async function syncIndexWithDatabase() {
 		.filter((post) => !dbIds.has(post.id))
 		.map((post) => post.id);
 
-	console.log(
+	logger.info(
 		`  to add ${toAdd.length} posts, to delete ${toDelete.length} posts.`,
 	);
 
@@ -165,8 +166,7 @@ export async function syncIndexWithDatabase() {
 			if (idx >= batches.length) return;
 			const currentBatchNum = ++batchNum;
 			const batchItems = batches[idx++];
-			process.stdout.clearLine(0);
-			process.stdout.write(
+			logger.info(
 				`\r  ${action.present} batch ${currentBatchNum}/${totalBatches} (${processed + 1}-${processed + batchItems.length} of ${total})...`,
 			);
 			await fn(batchItems, currentBatchNum, totalBatches);
@@ -184,10 +184,7 @@ export async function syncIndexWithDatabase() {
 			const endTime = Date.now();
 			const duration = Math.round(endTime - startTime);
 
-			process.stdout.clearLine(0);
-			process.stdout.write(
-				`\r  ${action.past} ${total} posts in ${duration}ms.\n`,
-			);
+			logger.info(`\r  ${action.past} ${total} posts in ${duration}ms.\n`);
 		}
 	}
 
@@ -206,7 +203,7 @@ export async function syncIndexWithDatabase() {
 				});
 
 				if (result.error)
-					console.error(`error adding documents: ${result.error.message}`);
+					logger.error(`error adding documents: ${result.error.message}`);
 			},
 			{ present: "adding", past: "added" },
 		);
@@ -238,7 +235,7 @@ export async function syncIndexWithDatabase() {
 		);
 	}
 	if (toAdd.length === 0 && toUpdate.length === 0 && toDelete.length === 0) {
-		console.log("  index is up to date.\n");
+		logger.info("  index is up to date.\n");
 	}
 }
 
@@ -260,7 +257,7 @@ export function savePosts(posts: PostModel[]): PostModel[] {
 			if (res.changes === 1) inserted.push(p);
 		}
 	})();
-	console.log(
+	logger.debug(
 		`  inserted ${inserted.length} posts: ${inserted
 			.slice(0, 10)
 			.map((p) => p.raw.publicId)
@@ -274,7 +271,7 @@ async function indexPosts(posts: PostModel[]) {
 	const docs = posts.map((p) => p.raw);
 	const response = await postsIndex.addDocuments(docs);
 	await searchClient.tasks.waitForTask(response.taskUid, { timeout: TIMEOUT });
-	console.log(`  indexed ${docs.length} posts in Meilisearch`);
+	logger.info(`  indexed ${docs.length} posts in Meilisearch`);
 }
 
 export async function watchNewPosts() {
@@ -285,15 +282,15 @@ export async function watchNewPosts() {
 
 	const jetstream = new Jetstream({ client, retryAmount: 3 });
 	jetstream.start();
-	console.log("jetstream is listening");
+	loggerSync.info("jetstream is listening");
 
 	async function processBatch() {
 		if (unprocessedPosts.length === 0) return;
-		console.log(`processing batch of ${unprocessedPosts.length} posts...`);
+		loggerSync.info(`processing batch of ${unprocessedPosts.length} posts...`);
 		const batch = unprocessedPosts.splice(0, BATCH_SIZE);
 		const inserted = savePosts(batch);
 		await indexPosts(inserted);
-		console.log(`processed batch of ${inserted.length} posts.`);
+		loggerSync.info(`processed batch of ${inserted.length} posts.`);
 	}
 
 	function scheduleTimeout() {
@@ -310,7 +307,7 @@ export async function watchNewPosts() {
 		if (!post) return;
 
 		unprocessedPosts.push(new PostModel(client, post));
-		console.log(`new post with publicId ${post.publicId} received.`);
+		loggerSync.info(`new post with publicId ${post.publicId} received.`);
 
 		if (unprocessedPosts.length >= BATCH_SIZE) {
 			if (batchTimeout) {

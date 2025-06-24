@@ -1,4 +1,8 @@
+import { Logger } from "@sillowww/lily";
 import fs from "node:fs";
+
+const logger = new Logger("search");
+const configLogger = logger.child("config");
 
 const RESET = "\x1b[0m";
 const FG_CYAN = "\x1b[36m";
@@ -27,11 +31,13 @@ const config = {
 			process.env.SEARCH_SKIP_SYNC === "1" ||
 			process.env.SEARCH_SKIP_SYNC === "true",
 		TIMEOUT: process.env.SEARCH_TIMEOUT
-			? parseInt(process.env.SEARCH_TIMEOUT)
+			? Number.parseInt(process.env.SEARCH_TIMEOUT)
 			: 5000,
 	},
 	SERVER: {
 		PORT: process.env.SERVER_PORT || 3001,
+		LOGGING_WEBHOOK: process.env.LOGGING_WEBHOOK || null,
+		MENTION_ID: process.env.MENTION_ID || null,
 	},
 	DISCUIT: {
 		API_URL: process.env.DISCUIT_URL || "http://discuit.org/api",
@@ -43,18 +49,21 @@ const config = {
 	},
 };
 
-console.log(`${FG_CYAN}CONFIGURATION:${RESET}`);
+configLogger.debug(`${FG_CYAN}CONFIGURATION:${RESET}`);
 for (const [key, value] of Object.entries(config)) {
 	if (typeof value === "object") {
-		console.log(`  ${FG_CYAN}${key}:${RESET}`);
+		configLogger.debug(`  ${FG_CYAN}${key}:${RESET}`);
 		for (const [subKey, subValue] of Object.entries(value)) {
-			console.log(
+			configLogger.debug(
 				`    ${FG_YELLOW}${subKey}${RESET}: ${FG_GREEN}${subValue}${RESET}`,
 			);
 		}
 	} else {
-		console.log(`${FG_MAGENTA}${key}${RESET}: ${FG_GREEN}${value}${RESET}`);
+		configLogger.debug(
+			`${FG_MAGENTA}${key}${RESET}: ${FG_GREEN}${value}${RESET}`,
+		);
 	}
 }
-console.log();
+configLogger.debug("");
 export default config;
+export { logger };

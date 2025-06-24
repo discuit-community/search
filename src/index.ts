@@ -4,6 +4,7 @@ import { swagger } from "@elysiajs/swagger";
 import { staticPlugin } from "@elysiajs/static";
 import { createGzip } from "node:zlib";
 
+import logger from "./logger";
 import ENV from "./env";
 import { postsIndex } from "./meilisearch";
 import { syncIndexWithDatabase, watchNewPosts } from "./sync";
@@ -112,14 +113,14 @@ const app = new Elysia()
 		switch (code) {
 			case "SearchFailed":
 				set.status = 500;
-				console.error("search failed:", error);
+				logger.error("search failed:", error);
 				return { error: "search failed", code: 500 };
 			case "NOT_FOUND":
 				set.status = 404;
 				return { error: "not found", code: 404 };
 			default:
 				set.status = 500;
-				console.error("internal server error:", error);
+				logger.error("internal server error:", error);
 				return { error: "internal server error", code: 500 };
 		}
 	})
@@ -325,13 +326,13 @@ const app = new Elysia()
 
 async function main() {
 	if (ENV.SEARCH.SKIP_SYNC || ARGS.SKIP_SYNC)
-		console.log(
+		logger.debug(
 			`skipping index sync due to ${ENV.SEARCH.SKIP_SYNC ? "env" : "args"} setting.`,
 		);
 	else await syncIndexWithDatabase();
 
 	app.listen(ENV.SERVER.PORT);
-	console.log(
+	logger.info(
 		`search is running at ${app.server?.hostname}:${app.server?.port}`,
 	);
 
@@ -339,15 +340,15 @@ async function main() {
 }
 
 main().catch((err) => {
-	console.error("error starting the server:", err);
+	logger.error("error starting the server:", err);
 	process.exit(1);
 });
 
 // on error
 process.on("uncaughtException", (err) => {
-	console.error("uncaught exception:", err);
+	logger.error("uncaught exception:", err);
 });
 
 process.on("unhandledRejection", (reason, promise) => {
-	console.error("unhandled rejection at:", promise, "reason:", reason);
+	logger.error("unhandled rejection at:", promise, "reason:", reason);
 });
